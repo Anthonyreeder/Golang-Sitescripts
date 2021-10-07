@@ -1,10 +1,9 @@
 package main
 
-import (
-	global "./model"
-)
+import "Golang-Sitescripts/shopify"
+
+//global "Golang-Sitescripts/global"
 
 func main() {
-	//This would otherwise come from the UI. Hardcoding for development purposes.
-	global.Url = ""
+	shopify.Shopify()
 }
