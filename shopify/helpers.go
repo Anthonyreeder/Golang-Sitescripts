@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/anaskhan96/soup"
 )
 
 func AddHeaders(header Header, host string) http.Header {
@@ -40,4 +42,20 @@ func AddHeaders(header Header, host string) http.Header {
 	}
 
 	return x
+}
+
+func ExtractValue(body, elementType, targetType, targetValue string) string {
+	var val = ""
+
+	_body := soup.HTMLParse(body)
+	element := _body.Find(elementType, targetType, targetValue).Pointer.Attr
+	for _, v := range element {
+		if v.Key == "value" {
+			//Locate the authKey attribute value within this node
+			val = v.Val
+		}
+	}
+
+	return val
+
 }

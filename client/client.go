@@ -11,10 +11,6 @@ import (
 
 var Client http.Client
 
-func SetupTask() {
-
-}
-
 //Add proxy support later if needed
 func SetupClient() {
 	cookieJar, _ := cookiejar.New(nil)

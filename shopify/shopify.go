@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-
-	"github.com/anaskhan96/soup"
 )
 
 ///TODO:
@@ -31,6 +29,7 @@ var city = "Cardiff"
 var country = "United kingdom"
 var postal_code = "CF10 3RB"
 var phone = "01763220883"
+var province = "Cardiff"
 
 //Global variables to ease the burden of passing data between methods, would otherwise be handled by the supporting framework/task system
 var authKey = ""
@@ -61,10 +60,13 @@ func Shopify() {
 		fmt.Println("Failed to load checkoutForm")
 	}
 
+	//Submit the profile information
 	fmt.Println("Submitting customer information")
 	if !SubmitCustomerInfo() {
 		fmt.Println("Failed to submit customer information")
 	}
+
+	GetShippingToken()
 
 }
 
@@ -81,17 +83,8 @@ func ShopifyGetProductPage() bool {
 	case 200:
 		fmt.Println("Page loaded, checking for bot-key")
 
-		//Parse HTML using soup
-		responseBody := soup.HTMLParse(string(respBytes))
-
 		//Find the bot-key input field in the form
-		botKeyElement := responseBody.Find("input", "id", "bot-key").Pointer.Attr
-		for _, v := range botKeyElement {
-			if v.Key == "value" {
-				//Locate the botKey attribute value within this node
-				botKey = v.Val
-			}
-		}
+		botKey = ExtractValue(string(respBytes), "input", "id", "bot-key")
 
 		//Check if botkey has a value now
 		if botKey != "" {
@@ -115,7 +108,7 @@ func ShopifyAddToCartStandard() bool {
 		Properties: struct {
 			BotKey string `json:"bot-key"`
 		}{BotKey: botKey},
-		OptionSize: size, //Selected size
+		OptionSize: size,
 		Id:         offerId,
 		Quantity:   quantity,
 	})
@@ -155,23 +148,16 @@ func LoadCheckoutForm() bool {
 	case 200:
 		fmt.Println("Checkout form loaded, checking for auth token")
 
-		//Parse HTML using soup
-		responseBody := soup.HTMLParse(string(respBytes))
-
 		//Find the auth-key input field in the form
-		authTokenElement := responseBody.Find("input", "name", "authenticity_token").Pointer.Attr
-		for _, v := range authTokenElement {
-			if v.Key == "value" {
-				//Locate the authKey attribute value within this node
-				authKey = v.Val
-				formUrl = resp.Request.URL.String()
-			}
-		}
+		authKey = ExtractValue(string(respBytes), "input", "name", "authenticity_token")
+
+		//globalise the redirected url
+		formUrl = resp.Request.URL.String()
 
 		//Check if authKey has a value now
 		if authKey != "" {
-			fmt.Printf("Successfully extracted the auth-key : %s", authKey)
-			fmt.Printf("Retrieved the form url : %s", formUrl)
+			fmt.Printf("Successfully extracted the auth-key : %s\n", authKey)
+			fmt.Printf("Retrieved the form url : %s\n", formUrl)
 			return true
 		} else {
 			fmt.Println("There was an issue getting the auth key")
@@ -183,6 +169,7 @@ func LoadCheckoutForm() bool {
 	return false
 }
 
+//POST the profile information
 func SubmitCustomerInfo() bool {
 	payload := url.Values{
 		"utf8":                                   {`\u2713`},
@@ -223,10 +210,32 @@ func SubmitCustomerInfo() bool {
 
 	switch resp.StatusCode {
 	case 200:
+		fmt.Printf("Successfully posted the customer information for %s\n", email)
 		return true
 
 	default:
 		fmt.Printf("request to %s returned the following unexpected response code: %v", post.Endpoint, resp.StatusCode)
+	}
+
+	return false
+}
+
+func GetShippingToken() bool {
+	get := client.GET{
+		Endpoint: fmt.Sprintf("%s/cart/shipping_rates.json?shipping_address[zip]=%s&shipping_address[country]=%s&shipping_address[province]=%s", host, postal_code, country, province),
+	}
+
+	request := client.NewRequest(get)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	respBytes, resp := client.NewResponse(client.Client, request)
+
+	switch resp.StatusCode {
+	case 200:
+		//fmt.Println("Shipping token request loaded, extracting shipping token")
+		fmt.Println(string(respBytes))
+
+	default:
+		fmt.Printf("GET request to %s returned the following unexpected response code: %v", get.Endpoint, resp.StatusCode)
 	}
 
 	return false
