@@ -64,10 +64,10 @@ func NewRequest(requestType interface{}) *http.Request {
 	}
 }
 
-func NewResponse(client http.Client, request *http.Request) ([]byte, *http.Response) {
+func NewResponse(request *http.Request) ([]byte, *http.Response) {
 	request.Close = true
 
-	resp, err := client.Do(request)
+	resp, err := Client.Do(request)
 	if err != nil {
 		panic(err)
 	}
