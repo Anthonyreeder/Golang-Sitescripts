@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	"github.com/anaskhan96/soup"
 )
@@ -19,9 +20,23 @@ var host = "https://limitededt.com"
 var size = "7"
 var quantity = "1"
 
-//These are global variables placed here just to ease the burden of passing data between methods, would otherwise be handled by the supporting framework/task system
+//Profile information
+var email = "JohnSmith5318008@gmail.com"
+var fname = "John"
+var lname = "Smith"
+var company = "Torchwood"
+var addy1 = "1 Castle St"
+var addy2 = ""
+var city = "Cardiff"
+var country = "United kingdom"
+var postal_code = "CF10 3RB"
+var phone = "01763220883"
+
+//Global variables to ease the burden of passing data between methods, would otherwise be handled by the supporting framework/task system
+var authKey = ""
 var botKey = ""
 var offerId = "32521243820103" //Either passed in frrom UI or extracted. Depending on what the UI passes to the task.
+var formUrl = ""
 
 //Entry point for Shopify Demo
 func Shopify() {
@@ -45,6 +60,12 @@ func Shopify() {
 	if !LoadCheckoutForm() {
 		fmt.Println("Failed to load checkoutForm")
 	}
+
+	fmt.Println("Submitting customer information")
+	if !SubmitCustomerInfo() {
+		fmt.Println("Failed to submit customer information")
+	}
+
 }
 
 //GET Product page and extract bot-key
@@ -128,9 +149,85 @@ func LoadCheckoutForm() bool {
 
 	request := client.NewRequest(get)
 	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
-	respBytes, _ := client.NewResponse(client.Client, request)
+	respBytes, resp := client.NewResponse(client.Client, request)
 
-	fmt.Println(string(respBytes))
+	switch resp.StatusCode {
+	case 200:
+		fmt.Println("Checkout form loaded, checking for auth token")
+
+		//Parse HTML using soup
+		responseBody := soup.HTMLParse(string(respBytes))
+
+		//Find the auth-key input field in the form
+		authTokenElement := responseBody.Find("input", "name", "authenticity_token").Pointer.Attr
+		for _, v := range authTokenElement {
+			if v.Key == "value" {
+				//Locate the authKey attribute value within this node
+				authKey = v.Val
+				formUrl = resp.Request.URL.String()
+			}
+		}
+
+		//Check if authKey has a value now
+		if authKey != "" {
+			fmt.Printf("Successfully extracted the auth-key : %s", authKey)
+			fmt.Printf("Retrieved the form url : %s", formUrl)
+			return true
+		} else {
+			fmt.Println("There was an issue getting the auth key")
+		}
+	default:
+		fmt.Printf("GET request to %s returned the following unexpected response code: %v", get.Endpoint, resp.StatusCode)
+	}
+
+	return false
+}
+
+func SubmitCustomerInfo() bool {
+	payload := url.Values{
+		"utf8":                                   {`\u2713`},
+		"_method":                                {"patch"},
+		"authenticity_token":                     {authKey},
+		"previous_step":                          {"contact_information"},
+		"step":                                   {"shipping_method"},
+		"checkout[email]":                        {email},
+		"checkout[buyer_accepts_marketing]":      {"1"},
+		"checkout[pickup_in_store][selected]":    {"false"},
+		"checkout[shipping_address][first_name]": {fname},
+		"checkout[shipping_address][last_name]":  {lname},
+		"checkout[shipping_address][company]":    {company},
+		"checkout[shipping_address][address1]":   {addy1},
+		"checkout[shipping_address][address2]":   {addy2},
+		"checkout[shipping_address][city]":       {city},
+		"checkout[shipping_address][country]":    {country},
+		// "checkout[shipping_address][province]": province,
+		"checkout[shipping_address][zip]":   {postal_code},
+		"checkout[shipping_address][phone]": {phone},
+		// "g-recaptcha-response": captcha_token,
+		"checkout[client_details][browser_width]":      {"1029"},
+		"checkout[client_details][browser_height]":     {"937"},
+		"checkout[client_details][javascript_enabled]": {"1"},
+		"checkout[client_details][color_depth]":        {"24"},
+		"checkout[client_details][java_enabled]":       {"false"},
+		"checkout[client_details][browser_tz]":         {"300"},
+	}
+
+	post := client.POSTUrlEncoded{
+		Endpoint:       formUrl,
+		EncodedPayload: payload.Encode(),
+	}
+
+	request := client.NewRequest(post)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	_, resp := client.NewResponse(client.Client, request)
+
+	switch resp.StatusCode {
+	case 200:
+		return true
+
+	default:
+		fmt.Printf("request to %s returned the following unexpected response code: %v", post.Endpoint, resp.StatusCode)
+	}
 
 	return false
 }

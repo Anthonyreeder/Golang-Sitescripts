@@ -19,7 +19,6 @@ func AddHeaders(header Header, host string) http.Header {
 		"Sec-Fetch-User":            {"?1"},
 		"Sec-Fetch-Dest":            {"document"},
 		"Accept-Language":           {"en-GB,en-US;q=0.9,en;q=0.8"},
-		"content-type":              {"application/json"},
 	}
 
 	if header.content != nil {
