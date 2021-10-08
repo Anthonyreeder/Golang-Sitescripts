@@ -8,6 +8,7 @@ import (
 	"github.com/anaskhan96/soup"
 )
 
+//Default headers with functionality to set the host, content type and add 1-off hard-coded cookies.
 func AddHeaders(header Header, host string) http.Header {
 	var x = http.Header{
 		"Host":                      {host},
@@ -44,6 +45,7 @@ func AddHeaders(header Header, host string) http.Header {
 	return x
 }
 
+//Used in multiple methods to extract key values
 func ExtractValue(body, elementType, targetType, targetValue string) string {
 	var val = ""
 
@@ -57,5 +59,4 @@ func ExtractValue(body, elementType, targetType, targetValue string) string {
 	}
 
 	return val
-
 }

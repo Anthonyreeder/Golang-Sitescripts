@@ -72,11 +72,15 @@ func Shopify() {
 
 //GET Product page and extract bot-key
 func ShopifyGetProductPage() bool {
+	//Setup our GET request obj
 	get := client.GET{
 		Endpoint: fmt.Sprintf("%s/collections/mens/products/adidas-originals-pharrell-williams-boost-slides-fy6140", host),
 	}
+	//Retrieve a configured HTTP Request obj
 	request := client.NewRequest(get)
+	//Add our headers to the HTTP Request obj
 	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	//Obtain the response
 	respBytes, resp := client.NewResponse(client.Client, request)
 
 	switch resp.StatusCode {
@@ -220,6 +224,7 @@ func SubmitCustomerInfo() bool {
 	return false
 }
 
+//GET the shipping details for this profile and extract the shipping token
 func GetShippingToken() bool {
 	get := client.GET{
 		Endpoint: fmt.Sprintf("%s/cart/shipping_rates.json?shipping_address[zip]=%s&shipping_address[country]=%s&shipping_address[province]=%s", host, postal_code, country, province),
