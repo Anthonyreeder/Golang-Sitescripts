@@ -94,7 +94,7 @@ func ShopifyGetProductPage() bool {
 			fmt.Println("There was an issue getting the bot key")
 		}
 	default:
-		fmt.Printf("GET request to %s returned the following unexpected response code: %v", get.Endpoint, resp.StatusCode)
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}
 
 	return false
@@ -128,7 +128,7 @@ func ShopifyAddToCartStandard() bool {
 		return true
 
 	default:
-		fmt.Printf("request to %s returned the following unexpected response code: %v", post.Endpoint, resp.StatusCode)
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
 	}
 
 	return false
@@ -163,7 +163,7 @@ func LoadCheckoutForm() bool {
 			fmt.Println("There was an issue getting the auth key")
 		}
 	default:
-		fmt.Printf("GET request to %s returned the following unexpected response code: %v", get.Endpoint, resp.StatusCode)
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}
 
 	return false
@@ -214,7 +214,7 @@ func SubmitCustomerInfo() bool {
 		return true
 
 	default:
-		fmt.Printf("request to %s returned the following unexpected response code: %v", post.Endpoint, resp.StatusCode)
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
 	}
 
 	return false
@@ -235,7 +235,7 @@ func GetShippingToken() bool {
 		fmt.Println(string(respBytes))
 
 	default:
-		fmt.Printf("GET request to %s returned the following unexpected response code: %v", get.Endpoint, resp.StatusCode)
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}
 
 	return false
