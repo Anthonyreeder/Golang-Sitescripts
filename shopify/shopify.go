@@ -20,20 +20,23 @@ var quantity = "1"
 var email = "JohnSmith5318008@gmail.com"
 var fname = "John"
 var lname = "Smith"
-var company = "Torchwood"
-var addy1 = "1 Castle St"
+var company = ""
+var addy1 = "37 Shenton Way"
 var addy2 = ""
-var city = "Cardiff"
-var country = "United kingdom"
-var postal_code = "CF10 3RB"
-var phone = "01763220883"
-var province = "Cardiff"
+var city = ""
+var country = "Singapore"
+var postal_code = "068811"
+var phone = "68246580"
+var province = ""
 
-//Global variables to ease the burden of passing data between methods, would otherwise be handled by the supporting framework/task system
+//Scoped-access variables to ease the burden of passing data between methods, would otherwise be handled by the supporting framework/task system
 var authKey = ""
 var botKey = ""
+var gatewayKey = ""
 var offerId = "32521243820103" //AKA Variant ID
 var formUrl = ""
+var shipping_option = ""
+var total_amount = ""
 
 //Entry point for Shopify Demo
 func Shopify() {
@@ -64,6 +67,24 @@ func Shopify() {
 		fmt.Println("Failed to submit customer information")
 	}
 
-	GetShippingToken()
+	fmt.Println("Grabbing the shipping id")
+	if !ExtractShippingId() {
+		fmt.Println("Failed to get the shipping id")
+	}
+
+	fmt.Println("Extacting the shipping token")
+	if !ExtractShippingToken() {
+		fmt.Println("Failed to extact the shipping token")
+	}
+
+	fmt.Println("Submitting the shipping method details")
+	if !SubmitShippingMethodDetails() {
+		fmt.Println("Failed to submit the shipping method details")
+	}
+
+	fmt.Println("Extracting payment gateway Id")
+	if !ExtractPaymentGatewayId() {
+		fmt.Println("Failed to extract the payment gateway Id")
+	}
 
 }

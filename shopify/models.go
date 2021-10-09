@@ -18,3 +18,12 @@ type AddToCartStandardRequest struct {
 	Id         string `json:"id"`
 	Quantity   string `json:"quantity"`
 }
+
+type ShippingRate struct {
+	Name  string `json:"name"`
+	Price string `json:"price"`
+}
+
+type ShippingMethodResponse struct {
+	ShippingRates []ShippingRate `json:"shipping_rates"`
+}

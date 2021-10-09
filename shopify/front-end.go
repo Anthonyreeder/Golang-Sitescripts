@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 //GET Product page and extract bot-key
@@ -24,14 +25,12 @@ func ShopifyGetProductPage() bool {
 
 	switch resp.StatusCode {
 	case 200:
-		fmt.Println("Page loaded, checking for bot-key")
 
 		//Find the bot-key input field in the form
 		botKey = ExtractValue(string(respBytes), "input", "id", "bot-key")
 
 		//Check if botkey has a value now
 		if botKey != "" {
-			fmt.Println("Successfully extracted the bot-key")
 			return true
 		} else {
 			fmt.Println("There was an issue getting the bot key")
@@ -67,7 +66,6 @@ func ShopifyAddToCartStandard() bool {
 
 	switch resp.StatusCode {
 	case 200:
-		fmt.Println("Successfully added item to cart ")
 		return true
 
 	default:
@@ -89,7 +87,6 @@ func LoadCheckoutForm() bool {
 
 	switch resp.StatusCode {
 	case 200:
-		fmt.Println("Checkout form loaded, checking for auth token")
 
 		//Find the auth-key input field in the form
 		authKey = ExtractValue(string(respBytes), "input", "name", "authenticity_token")
@@ -99,8 +96,6 @@ func LoadCheckoutForm() bool {
 
 		//Check if authKey has a value now
 		if authKey != "" {
-			fmt.Printf("Successfully extracted the auth-key : %s\n", authKey)
-			fmt.Printf("Retrieved the form url : %s\n", formUrl)
 			return true
 		} else {
 			fmt.Println("There was an issue getting the auth key")
@@ -130,9 +125,9 @@ func SubmitCustomerInfo() bool {
 		"checkout[shipping_address][address2]":   {addy2},
 		"checkout[shipping_address][city]":       {city},
 		"checkout[shipping_address][country]":    {country},
-		// "checkout[shipping_address][province]": province,
-		"checkout[shipping_address][zip]":   {postal_code},
-		"checkout[shipping_address][phone]": {phone},
+		"checkout[shipping_address][province]":   {province},
+		"checkout[shipping_address][zip]":        {postal_code},
+		"checkout[shipping_address][phone]":      {phone},
 		// "g-recaptcha-response": captcha_token,
 		"checkout[client_details][browser_width]":      {"1029"},
 		"checkout[client_details][browser_height]":     {"937"},
@@ -153,7 +148,6 @@ func SubmitCustomerInfo() bool {
 
 	switch resp.StatusCode {
 	case 200:
-		fmt.Printf("Successfully posted the customer information for %s\n", email)
 		return true
 
 	default:
@@ -163,8 +157,8 @@ func SubmitCustomerInfo() bool {
 	return false
 }
 
-//GET the shipping details for this profile and extract the shipping token
-func GetShippingToken() bool {
+//GET the shipping details for this profile and extract the shipping id
+func ExtractShippingId() bool {
 	get := client.GET{
 		Endpoint: fmt.Sprintf("%s/cart/shipping_rates.json?shipping_address[zip]=%s&shipping_address[country]=%s&shipping_address[province]=%s", host, postal_code, country, province),
 	}
@@ -175,9 +169,126 @@ func GetShippingToken() bool {
 
 	switch resp.StatusCode {
 	case 200:
-		//fmt.Println("Shipping token request loaded, extracting shipping token")
-		fmt.Println(string(respBytes))
 
+		//Decode the response into a json struct
+		shippingMethodResponse := ShippingMethodResponse{}
+		json.Unmarshal(respBytes, &shippingMethodResponse)
+
+		//extract the name and price
+		name := strings.Replace(shippingMethodResponse.ShippingRates[0].Name, " ", "%20", -1)
+		price := shippingMethodResponse.ShippingRates[0].Price
+
+		//# Generate the shipping id to submit with checkout
+		shipping_option = "shopify-" + name + "-" + price
+		if shipping_option != "" {
+			return true
+		}
+
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
+	}
+
+	return false
+}
+
+//GET the next-step in shipping to extrac the shipping token
+func ExtractShippingToken() bool {
+	//reset global auth key
+	authKey = ""
+	//END
+
+	get := client.GET{
+		Endpoint: fmt.Sprintf("%s?step=shipping_method", formUrl),
+	}
+
+	request := client.NewRequest(get)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+
+		//Find the auth-key input field in the form
+		authKey = ExtractValue(string(respBytes), "input", "name", "authenticity_token")
+
+		//Check if authKey has a value now
+		if authKey != "" {
+			return true
+		} else {
+			fmt.Println("There was an issue getting the auth key")
+		}
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
+	}
+
+	return false
+}
+
+//POST the shipping token and shipping ID
+func SubmitShippingMethodDetails() bool {
+	payload := url.Values{
+		"utf8":                        {`\u2713`},
+		"_method":                     {"patch"},
+		"authenticity_token":          {authKey},
+		"previous_step":               {"contact_information"},
+		"step":                        {"payment_method"},
+		"checkout[shipping_rate][id]": {shipping_option},
+		"checkout[client_details][browser_width]":      {"1029"},
+		"checkout[client_details][browser_height]":     {"937"},
+		"checkout[client_details][javascript_enabled]": {"1"},
+		"checkout[client_details][color_depth]":        {"24"},
+		"checkout[client_details][java_enabled]":       {"false"},
+		"checkout[client_details][browser_tz]":         {"300"},
+	}
+
+	post := client.POSTUrlEncoded{
+		Endpoint:       formUrl,
+		EncodedPayload: payload.Encode(),
+	}
+
+	request := client.NewRequest(post)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	_, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		return true
+
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
+	}
+
+	return false
+}
+
+//GET the payment_method values needed to submit a payment
+func ExtractPaymentGatewayId() bool {
+	//reset global auth key
+	authKey = ""
+	//END
+
+	get := client.GET{
+		Endpoint: fmt.Sprintf("%s?previous_step=shipping_method&step=payment_method", formUrl),
+	}
+
+	request := client.NewRequest(get)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+
+		//Find the gateway, auth and total amount values.
+		gatewayKey = ExtractValue(string(respBytes), "input", "name", "checkout[payment_gateway]")
+		authKey = ExtractValue(string(respBytes), "input", "name", "authenticity_token")
+		total_amount = ExtractValue(string(respBytes), "span", "class", "payment-due__price", "data-checkout-payment-due-target")
+
+		//Check if authKey has a value now
+		if authKey != "" && gatewayKey != "" && total_amount != "" {
+			return true
+		} else {
+			fmt.Println("There was an issue getting the auth key")
+		}
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}
