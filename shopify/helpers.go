@@ -46,13 +46,16 @@ func AddHeaders(header Header, host string) http.Header {
 }
 
 //Used in multiple methods to extract key values
-func ExtractValue(body, elementType, targetType, targetValue string) string {
+func ExtractValue(body, elementType, targetType, typeValue string, optionalAttribute ...string) string {
 	var val = ""
-
+	var value = "value"
+	if len(optionalAttribute) > 0 {
+		value = optionalAttribute[0]
+	}
 	_body := soup.HTMLParse(body)
-	element := _body.Find(elementType, targetType, targetValue).Pointer.Attr
+	element := _body.Find(elementType, targetType, typeValue).Pointer.Attr
 	for _, v := range element {
-		if v.Key == "value" {
+		if v.Key == value {
 			//Locate the authKey attribute value within this node
 			val = v.Val
 		}
