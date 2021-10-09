@@ -2,4 +2,4 @@
 SiteScripts created by anthony reeder
 This is a shopify module I'm writing in golang below is a brief explanation of some of the code I have written.
 
-![Alt text](images/ShopifyPackage.png?raw=true "ShopifyPackage")
+![Alt text](images/ShopifyPackage.png?raw=true "ShopifyPackage"){:height="50px" width="50px"}
