@@ -5,8 +5,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/url"
+	"strconv"
 	"strings"
+
+	"github.com/anaskhan96/soup"
 )
 
 //GET Product page and extract bot-key
@@ -66,6 +70,43 @@ func ShopifyAddToCartStandard() bool {
 
 	switch resp.StatusCode {
 	case 200:
+		return true
+
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
+	}
+
+	return false
+}
+
+//https://shopify.dev/api/admin-rest/2021-10/resources/payment#[post]https://elb.deposit.shopifycs.com/sessions
+func CreatePaymentSession() bool {
+	payloadBytes, _ := json.Marshal(PaymentSessionRequest{
+		CreditCard: CreditCard{
+			Number:             cardNumber,
+			Name:               name,
+			Month:              month,
+			Year:               year,
+			Verification_value: ccv,
+		},
+	})
+
+	post := client.POST{
+		Endpoint: "https://elb.deposit.shopifycs.com/sessions",
+		Payload:  bytes.NewReader(payloadBytes),
+	}
+
+	request := client.NewRequest(post)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil, contentType: "json"}, "elb.deposit.shopifycs.com")
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+
+		paymentSessionResponse := PaymentSessionResponse{}
+		json.Unmarshal(respBytes, &paymentSessionResponse)
+		payment_token = paymentSessionResponse.Id
+
 		return true
 
 	default:
@@ -157,8 +198,9 @@ func SubmitCustomerInfo() bool {
 	return false
 }
 
-//GET the shipping details for this profile and extract the shipping id
-func ExtractShippingId() bool {
+//GET the shipping rates for this profile and extract the shipping id
+//There is an async POST method which may be quicker
+func ExtractShippingRates() bool {
 	get := client.GET{
 		Endpoint: fmt.Sprintf("%s/cart/shipping_rates.json?shipping_address[zip]=%s&shipping_address[country]=%s&shipping_address[province]=%s", host, postal_code, country, province),
 	}
@@ -186,6 +228,48 @@ func ExtractShippingId() bool {
 
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
+	}
+
+	return false
+}
+
+//GET the shipping rates for this profile and extract the shipping id
+//There is an async POST method which may be quicker
+func POSTExtractShippingRates() bool {
+
+	payload := url.Values{
+		"shipping_address[zip]":      {postal_code},
+		"shipping_address[country]":  {country},
+		"shipping_address[province]": {province},
+	}
+
+	post := client.POSTUrlEncoded{
+		Endpoint:       fmt.Sprintf("%s/cart/prepare_shipping_rates.json", host),
+		EncodedPayload: payload.Encode(),
+	}
+	request := client.NewRequest(post)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+
+		//Decode the response into a json struct
+		shippingMethodResponse := ShippingMethodResponse{}
+		json.Unmarshal(respBytes, &shippingMethodResponse)
+
+		//extract the name and price
+		name := strings.Replace(shippingMethodResponse.ShippingRates[0].Name, " ", "%20", -1)
+		price := shippingMethodResponse.ShippingRates[0].Price
+
+		//# Generate the shipping id to submit with checkout
+		shipping_option = "shopify-" + name + "-" + price
+		if shipping_option != "" {
+			return true
+		}
+
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
 	}
 
 	return false
@@ -289,6 +373,72 @@ func ExtractPaymentGatewayId() bool {
 		} else {
 			fmt.Println("There was an issue getting the auth key")
 		}
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
+	}
+
+	return false
+}
+
+func SubmitPayment() bool {
+	payload := url.Values{
+		//		"utf8": {"\u2713"},
+		"_method":                             {"patch"},
+		"authenticity_token":                  {authKey},
+		"previous_step":                       {"payment_method"},
+		"step":                                {""},
+		"s":                                   {payment_token},
+		"checkout[payment_gateway]":           {gatewayKey},
+		"checkout[credit_card][vault]":        {"false"},
+		"checkout[different_billing_address]": {"false"}, //This should be set to true then we use profile billing. Look at later.
+		"checkout[vault_phone]":               {""},
+		"checkout[total_price]":               {total_amount},
+		"complete":                            {"1"},
+		"checkout[client_details][browser_width]":      {strconv.Itoa(rand.Intn(2000-1000) + 1000)}, //I dont like this, look at this later.
+		"checkout[client_details][browser_height]":     {strconv.Itoa(rand.Intn(2000-1000) + 1000)},
+		"checkout[client_details][javascript_enabled]": {"1"},
+		"checkout[client_details][color_depth]":        {"24"},
+		"checkout[client_details][java_enabled]":       {"false"},
+		"checkout[client_details][browser_tz]":         {"300"},
+	}
+
+	post := client.POSTUrlEncoded{
+		Endpoint:       formUrl,
+		EncodedPayload: payload.Encode(),
+	}
+
+	request := client.NewRequest(post)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	_, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		process_url = resp.Request.URL.String()
+		return true
+
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
+	}
+
+	return false
+}
+
+func CheckPaymentProcess() bool {
+	get := client.GET{
+		Endpoint: process_url,
+	}
+
+	request := client.NewRequest(get)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		_body := soup.HTMLParse(string(respBytes))
+		messageResponse := _body.Find("p", "class", "notice__text").Text()
+		fmt.Printf("Checkout response: %s", messageResponse)
+		return true
+
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}

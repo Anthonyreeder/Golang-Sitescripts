@@ -29,6 +29,13 @@ var postal_code = "068811"
 var phone = "68246580"
 var province = ""
 
+//Card details
+var cardNumber = "5354568000637394"
+var name = "JohnSmith"
+var month = "03"
+var year = "2026"
+var ccv = "960"
+
 //Scoped-access variables to ease the burden of passing data between methods, would otherwise be handled by the supporting framework/task system
 var authKey = ""
 var botKey = ""
@@ -37,6 +44,8 @@ var offerId = "32521243820103" //AKA Variant ID
 var formUrl = ""
 var shipping_option = ""
 var total_amount = ""
+var payment_token = ""
+var process_url = ""
 
 //Entry point for Shopify Demo
 func Shopify() {
@@ -49,10 +58,21 @@ func Shopify() {
 		fmt.Println("Failed to get page")
 	}
 
+	//Get the payment session, we will need this later for the payment
+	if !CreatePaymentSession() {
+		fmt.Println("Failed to add to cart")
+	}
+
 	//Now the bot-key is set we add the product to cart
 	fmt.Println("Adding product to cart")
 	if !ShopifyAddToCartStandard() {
 		fmt.Println("Failed to add to cart")
+	}
+
+	//Get the shipping ID we need to submit shipping
+	fmt.Println("Grabbing the shipping id")
+	if !ExtractShippingRates() {
+		fmt.Println("Failed to get the shipping id")
 	}
 
 	//Load the checkout form so we can extract the AuthId
@@ -67,24 +87,33 @@ func Shopify() {
 		fmt.Println("Failed to submit customer information")
 	}
 
-	fmt.Println("Grabbing the shipping id")
-	if !ExtractShippingId() {
-		fmt.Println("Failed to get the shipping id")
-	}
-
+	//Get the shipping token we need to submit shipping
 	fmt.Println("Extacting the shipping token")
 	if !ExtractShippingToken() {
 		fmt.Println("Failed to extact the shipping token")
 	}
 
+	//Submit the shipping
 	fmt.Println("Submitting the shipping method details")
 	if !SubmitShippingMethodDetails() {
 		fmt.Println("Failed to submit the shipping method details")
 	}
 
+	//Get the payment gateway ID we need to process payment
 	fmt.Println("Extracting payment gateway Id")
 	if !ExtractPaymentGatewayId() {
 		fmt.Println("Failed to extract the payment gateway Id")
 	}
 
+	//Submit payment details
+	fmt.Println("Submitting payment details")
+	if !SubmitPayment() {
+		fmt.Println("Failed to submit payment details")
+	}
+
+	//Check if processing has finished and read result
+	fmt.Println("CheckPaymentProcess")
+	if !CheckPaymentProcess() {
+		fmt.Println("Payment isn't finished")
+	}
 }
