@@ -468,7 +468,7 @@ func CheckPaymentProcess() {
 		}
 
 	default:
-		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
+		fmt.Printf("unexpected status code %v when requesting : %s\n", resp.StatusCode, get.Endpoint)
 	}
 
 	taskComplete = false

@@ -2,6 +2,8 @@ package shopify
 
 import (
 	client "Golang-Sitescripts/client"
+	"fmt"
+	"time"
 )
 
 ///TODO:
@@ -11,11 +13,11 @@ import (
 //AddToCart add all response USE cases such as OOS, Sever not responding, Added to cart, Check quantity is correct
 
 //These are hard coded values which should come from the UI
-var host = "https://shop.doverstreetmarket.com"
-var link = "https://shop.doverstreetmarket.com"
+var host = "https://limitededt.com"
+var link = "https://limitededt.com"
 var size = "7"
 var quantity = "1"
-var offerId = "41028462215324" //AKA Variant ID
+var offerId = "32521243820103" //AKA Variant ID
 
 //Profile information
 var email = "JohnSmith5318008@gmail.com"
@@ -54,7 +56,31 @@ func Shopify() {
 	client.SetupClient()
 
 	//PlayFunctions(ShopifyGetProductPage())
+	start := time.Now()
 	FroneEndDemo()
+	elapsed := time.Since(start)
+	fmt.Println(elapsed)
+
+	//15.8571866s
+	//Checkout time -> 20.3942374s
+	//Implemented Goroutine handling of tasks
+	//Checkout time -> 9.6317531s
+
+	/*
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			FroneEndDemo()
+		}()
+		go func() {
+			defer wg.Done()
+			FrontEndPreCartDemo()
+		}()
+
+		wg.Wait()
+	*/
+
 }
 
 var taskComplete = false
@@ -78,14 +104,15 @@ func FrontEndPreCartDemo() {
 
 func FroneEndDemo() {
 	//_offerid = "39488656244795"
-	startTask(CreatePaymentSession, "PaymentSession")
-	startTask(ShopifyAddToCartStandard, "AddToCartId")
-	startTask(ExtractShippingRates, "GetShippingRates")
+
+	startTask(CreatePaymentSession, "PaymentSession", true)   //Dont wait as we dont us this until the end.
+	startTask(ShopifyAddToCartStandard, "AddToCartId")        //we must wait for this as 1. Its basically the monitor and 2. It wont submit checkout form without this being complete
+	startTask(ExtractShippingRates, "GetShippingRates", true) //If we are here then ATC was succcess, run async as then if it fails it'll just fail later in the task anyway and its unrecoverable, no point in waiting.
 	startTask(LoadCheckoutForm, "LoadCheckoutForm")
-	startTask(SubmitCustomerInfo, "SubmitTheCustomerInfo")
-	startTask(ExtractShippingToken, "ExtractTheShippingToken")
-	startTask(SubmitShippingMethodDetails, "SubmitShippingMethodDetails")
-	startTask(ExtractPaymentGatewayId, "GetPaymentGatewayId")
-	startTask(SubmitPayment, "SubmitThePaymentUrl")
-	startTask(CheckPaymentProcess, "CheckPaymentStatus")
+	startTask(SubmitCustomerInfo, "SubmitTheCustomerInfo", true)                //If we skip waiting here then we can start extracting the token now
+	startTask(ExtractShippingToken, "ExtractTheShippingToken")                  //must wait for token
+	startTask(SubmitShippingMethodDetails, "SubmitShippingMethodDetails", true) //If we skip waiting here then we can start getting the paymentGateID NOW
+	startTask(ExtractPaymentGatewayId, "GetPaymentGatewayId", true)             //We actually need the paymentGateway to continue, but somehow by NOT waiting for the response we shave off about 5-6s
+	startTask(SubmitPayment, "SubmitThePaymentUrl")                             //WE don't want to check the paymentStatus UNTIL this is sent so wait
+	startTask(CheckPaymentProcess, "CheckPaymentStatus")                        //Loop checkStatus
 }

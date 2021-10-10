@@ -68,19 +68,39 @@ func ExtractValue(body, elementType, targetType, typeValue string, optionalAttri
 	return val
 }
 
+func startInGo(functionToRun func(), name string) {
+
+}
+
 //Task helpers, to loop functions and log failures to console
-func startTask(functionToRun func(), name string) {
+func startTask(functionToRun func(), name string, waitForResult ...bool) {
 	taskComplete = false
 	fmt.Printf("Running task %s\n", name)
-	for {
-		functionToRun()
-		rand.Seed(time.Now().UnixNano())
-		r := rand.Intn(2000)
-		time.Sleep(time.Duration(r) * time.Millisecond)
-		if taskComplete {
-			break
-		} else {
-			fmt.Printf("%s task failed - retrying\n", name)
+	if len(waitForResult) > 0 {
+		go func() {
+			for {
+				functionToRun()
+				rand.Seed(time.Now().UnixNano())
+				r := rand.Intn(2000)
+				time.Sleep(time.Duration(r) * time.Millisecond)
+				if taskComplete {
+					break
+				} else {
+					fmt.Printf("%s task failed - retrying\n", name)
+				}
+			}
+		}()
+	} else {
+		for {
+			functionToRun()
+			rand.Seed(time.Now().UnixNano())
+			r := rand.Intn(2000)
+			time.Sleep(time.Duration(r) * time.Millisecond)
+			if taskComplete {
+				break
+			} else {
+				fmt.Printf("%s task failed - retrying\n", name)
+			}
 		}
 	}
 }
