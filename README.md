@@ -41,7 +41,8 @@ and here is an example of a GET and POST request using the current setup.
   
 </details>
 
-Tested with following shopify;
-https://shop.doverstreetmarket.com
-https://goodhoodstore.com
-https://limitededt.com
+<b>
+Tested with the following shopify<br>
+https://shop.doverstreetmarket.com<br>
+https://goodhoodstore.com<br>
+https://limitededt.com<br>
