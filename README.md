@@ -46,6 +46,7 @@ and here is an example of a GET and POST request using the current setup.
 </p>
 
 <p>
+<b> Looping requests </b>
 I wanted to be able to easily loop over requests when they fail while also having the ability to easily move requests around to play with website-flow order.
 I decided to move away from the boolean true/false concept. Though I'm still technically setting a boolean with these new changes I will change this in future to give more control over handling specific parts of the system. I'll probably create my own type structure to represent this.
 It has become clear that design between shopify sites despite using the same framework, can have largely different approaches this is especially true with addToCart.
@@ -53,6 +54,14 @@ It has become clear that design between shopify sites despite using the same fra
   <summary>Start task helper</summary>
   
  ![Alt text](images/startTask.png?raw=true "example")
+  
+</details>
+  
+  
+<details>
+  <summary>Start task helper</summary>
+  
+ ![Alt text](images/startTaskImplement.png?raw=true "example")
   
 </details>
 <p>
