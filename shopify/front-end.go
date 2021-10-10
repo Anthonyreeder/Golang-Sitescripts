@@ -14,11 +14,10 @@ import (
 )
 
 //GET Product page and extract bot-key
-func ShopifyGetProductPage() bool {
-
+func ShopifyGetProductPage() {
 	//Setup our GET request obj
 	get := client.GET{
-		Endpoint: fmt.Sprintf("%s/collections/mens/products/adidas-originals-pharrell-williams-boost-slides-fy6140", host),
+		Endpoint: fmt.Sprintf("%s/collections/mens/products/adidas-originals-pharrell-williams-boost-slides-fy6140", link),
 	}
 	//Retrieve a configured HTTP Request obj
 	request := client.NewRequest(get)
@@ -35,7 +34,8 @@ func ShopifyGetProductPage() bool {
 
 		//Check if botkey has a value now
 		if botKey != "" {
-			return true
+			taskComplete = true
+			return
 		} else {
 			fmt.Println("There was an issue getting the bot key")
 		}
@@ -43,24 +43,27 @@ func ShopifyGetProductPage() bool {
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}
 
-	return false
+	taskComplete = false
 }
 
 //POST JSON data to the standard endpoint used on the browsers 'addToCart' button.
-func ShopifyAddToCartStandard() bool {
+func ShopifyAddToCartStandard() {
+	var addToCartId string
+
+	if _offerid != "" {
+		addToCartId = _offerid
+		_offerid = ""
+	} else {
+		addToCartId = offerId
+	}
+
 	payloadBytes, _ := json.Marshal(AddToCartStandardRequest{
-		FormType: "product",
-		Utf8:     "",
-		Properties: struct {
-			BotKey string `json:"bot-key"`
-		}{BotKey: botKey},
-		OptionSize: size,
-		Id:         offerId,
-		Quantity:   quantity,
+		Id:       addToCartId,
+		Quantity: quantity,
 	})
 
 	post := client.POST{
-		Endpoint: fmt.Sprintf("%s/cart/add.js", host),
+		Endpoint: fmt.Sprintf("%s/cart/add.js", link),
 		Payload:  bytes.NewReader(payloadBytes),
 	}
 
@@ -70,17 +73,17 @@ func ShopifyAddToCartStandard() bool {
 
 	switch resp.StatusCode {
 	case 200:
-		return true
-
+		taskComplete = true
+		return
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
 	}
 
-	return false
+	taskComplete = false
 }
 
 //https://shopify.dev/api/admin-rest/2021-10/resources/payment#[post]https://elb.deposit.shopifycs.com/sessions
-func CreatePaymentSession() bool {
+func CreatePaymentSession() {
 	payloadBytes, _ := json.Marshal(PaymentSessionRequest{
 		CreditCard: CreditCard{
 			Number:             cardNumber,
@@ -107,19 +110,19 @@ func CreatePaymentSession() bool {
 		json.Unmarshal(respBytes, &paymentSessionResponse)
 		payment_token = paymentSessionResponse.Id
 
-		return true
-
+		taskComplete = true
+		return
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
 	}
 
-	return false
+	taskComplete = false
 }
 
 //GET the checkout form page and extract the AuthId
-func LoadCheckoutForm() bool {
+func LoadCheckoutForm() {
 	get := client.GET{
-		Endpoint: fmt.Sprintf("%s/checkout", host),
+		Endpoint: fmt.Sprintf("%s/checkout", link),
 	}
 
 	request := client.NewRequest(get)
@@ -137,7 +140,8 @@ func LoadCheckoutForm() bool {
 
 		//Check if authKey has a value now
 		if authKey != "" {
-			return true
+			taskComplete = true
+			return
 		} else {
 			fmt.Println("There was an issue getting the auth key")
 		}
@@ -145,11 +149,11 @@ func LoadCheckoutForm() bool {
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}
 
-	return false
+	taskComplete = false
 }
 
 //POST the profile information
-func SubmitCustomerInfo() bool {
+func SubmitCustomerInfo() {
 	payload := url.Values{
 		"utf8":                                   {`\u2713`},
 		"_method":                                {"patch"},
@@ -189,20 +193,20 @@ func SubmitCustomerInfo() bool {
 
 	switch resp.StatusCode {
 	case 200:
-		return true
-
+		taskComplete = true
+		return
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
 	}
 
-	return false
+	taskComplete = false
 }
 
 //GET the shipping rates for this profile and extract the shipping id
 //There is an async POST method which may be quicker
-func ExtractShippingRates() bool {
+func ExtractShippingRates() {
 	get := client.GET{
-		Endpoint: fmt.Sprintf("%s/cart/shipping_rates.json?shipping_address[zip]=%s&shipping_address[country]=%s&shipping_address[province]=%s", host, postal_code, country, province),
+		Endpoint: fmt.Sprintf("%s/cart/shipping_rates.json?shipping_address[zip]=%s&shipping_address[country]=%s&shipping_address[province]=%s", link, postal_code, country, province),
 	}
 
 	request := client.NewRequest(get)
@@ -223,20 +227,20 @@ func ExtractShippingRates() bool {
 		//# Generate the shipping id to submit with checkout
 		shipping_option = "shopify-" + name + "-" + price
 		if shipping_option != "" {
-			return true
+			taskComplete = true
+			return
 		}
 
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}
 
-	return false
+	taskComplete = false
 }
 
 //GET the shipping rates for this profile and extract the shipping id
 //There is an async POST method which may be quicker
-func POSTExtractShippingRates() bool {
-
+func POSTExtractShippingRates() {
 	payload := url.Values{
 		"shipping_address[zip]":      {postal_code},
 		"shipping_address[country]":  {country},
@@ -244,7 +248,7 @@ func POSTExtractShippingRates() bool {
 	}
 
 	post := client.POSTUrlEncoded{
-		Endpoint:       fmt.Sprintf("%s/cart/prepare_shipping_rates.json", host),
+		Endpoint:       fmt.Sprintf("%s/cart/prepare_shipping_rates.json", link),
 		EncodedPayload: payload.Encode(),
 	}
 	request := client.NewRequest(post)
@@ -265,21 +269,20 @@ func POSTExtractShippingRates() bool {
 		//# Generate the shipping id to submit with checkout
 		shipping_option = "shopify-" + name + "-" + price
 		if shipping_option != "" {
-			return true
+			taskComplete = true
+			return
 		}
 
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
 	}
 
-	return false
+	taskComplete = false
 }
 
 //GET the next-step in shipping to extrac the shipping token
-func ExtractShippingToken() bool {
-	//reset global auth key
+func ExtractShippingToken() {
 	authKey = ""
-	//END
 
 	get := client.GET{
 		Endpoint: fmt.Sprintf("%s?step=shipping_method", formUrl),
@@ -297,7 +300,8 @@ func ExtractShippingToken() bool {
 
 		//Check if authKey has a value now
 		if authKey != "" {
-			return true
+			taskComplete = true
+			return
 		} else {
 			fmt.Println("There was an issue getting the auth key")
 		}
@@ -305,11 +309,11 @@ func ExtractShippingToken() bool {
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}
 
-	return false
+	taskComplete = false
 }
 
 //POST the shipping token and shipping ID
-func SubmitShippingMethodDetails() bool {
+func SubmitShippingMethodDetails() {
 	payload := url.Values{
 		"utf8":                        {`\u2713`},
 		"_method":                     {"patch"},
@@ -336,20 +340,18 @@ func SubmitShippingMethodDetails() bool {
 
 	switch resp.StatusCode {
 	case 200:
-		return true
-
+		taskComplete = true
+		return
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
 	}
 
-	return false
+	taskComplete = false
 }
 
 //GET the payment_method values needed to submit a payment
-func ExtractPaymentGatewayId() bool {
-	//reset global auth key
+func ExtractPaymentGatewayId() {
 	authKey = ""
-	//END
 
 	get := client.GET{
 		Endpoint: fmt.Sprintf("%s?previous_step=shipping_method&step=payment_method", formUrl),
@@ -369,7 +371,8 @@ func ExtractPaymentGatewayId() bool {
 
 		//Check if authKey has a value now
 		if authKey != "" && gatewayKey != "" && total_amount != "" {
-			return true
+			taskComplete = true
+			return
 		} else {
 			fmt.Println("There was an issue getting the auth key")
 		}
@@ -377,12 +380,11 @@ func ExtractPaymentGatewayId() bool {
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}
 
-	return false
+	taskComplete = false
 }
 
-func SubmitPayment() bool {
+func SubmitPayment() {
 	payload := url.Values{
-		//		"utf8": {"\u2713"},
 		"_method":                             {"patch"},
 		"authenticity_token":                  {authKey},
 		"previous_step":                       {"payment_method"},
@@ -414,16 +416,17 @@ func SubmitPayment() bool {
 	switch resp.StatusCode {
 	case 200:
 		process_url = resp.Request.URL.String()
-		return true
+		taskComplete = true
+		return
 
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
 	}
 
-	return false
+	taskComplete = false
 }
 
-func CheckPaymentProcess() bool {
+func CheckPaymentProcess() {
 	get := client.GET{
 		Endpoint: process_url,
 	}
@@ -434,14 +437,46 @@ func CheckPaymentProcess() bool {
 
 	switch resp.StatusCode {
 	case 200:
-		_body := soup.HTMLParse(string(respBytes))
-		messageResponse := _body.Find("p", "class", "notice__text").Text()
-		fmt.Printf("Checkout response: %s", messageResponse)
-		return true
+		if !strings.Contains(resp.Request.URL.String(), "processing") {
+			_body := soup.HTMLParse(string(respBytes))
+			messageResponse := _body.Find("p", "class", "notice__text").Text()
+			fmt.Printf("Checkout response: %s", messageResponse)
+			taskComplete = true
+			return
+		}
 
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}
 
-	return false
+	taskComplete = false
+}
+
+//More methods
+//POST JSON data to the standard endpoint used on the browsers 'addToCart' button.
+func ShopifyChangeCart(q int) {
+	payloadBytes, _ := json.Marshal(ChangeCartStandardRequest{
+		Id:       "32521243820103",
+		Quantity: q,
+	})
+
+	post := client.POST{
+		Endpoint: fmt.Sprintf("%s/cart/change.js", link),
+		Payload:  bytes.NewReader(payloadBytes),
+	}
+
+	request := client.NewRequest(post)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil, contentType: "json"}, host)
+	_, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		taskComplete = true
+		return
+
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)
+	}
+
+	taskComplete = false
 }
