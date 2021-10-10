@@ -85,26 +85,30 @@ func Shopify() {
 
 var taskComplete = false
 
+//PreCart demo is a concept ideea not fully tested.
+//The ideea being that in order to create a shipping session an item is required in cart, once this has been created we are able to submit shipping, customer and create a payment agreement.
+//Changing the item quantity to 0 removes it frrom cart but does not remove out shipping session or payment agreement. As soon as we add to cart again we instantl try and submit our payment agreement and checkout.
 func FrontEndPreCartDemo() {
 	startTask(CreatePaymentSession, "PaymentSession")
-	_offerid = "32521243820103"
 	startTask(ShopifyAddToCartStandard, "AddToCartFakeId")
 	startTask(ExtractShippingRates, "GetShippingRates")
 	startTask(LoadCheckoutForm, "LoadCheckoutForm")
 	startTask(SubmitCustomerInfo, "SubmitTheCustomerInfo")
 	startTask(ExtractShippingToken, "ExtractTheShippingToken")
 	startTask(SubmitShippingMethodDetails, "SubmitShippingMethodDetails")
+
+	//The monitoring starts here. Now that the session has been created and payment agreement has been made. We remove the fakePID
 	startTaskInt(ShopifyChangeCart, "RemoveFakeProductFromCart", 0)
-	_offerid = "39499044323399"
+
+	//Now we set our offerID to the REAL pid and attempt to add to cart
+	offerId = "39499044323399"
 	startTask(ShopifyAddToCartStandard, "AddToCartRealId")
-	startTask(ExtractPaymentGatewayId, "GetPaymentGatewayId")
+	startTask(ExtractPaymentGatewayId, "GetPaymentGatewayId", true)
 	startTask(SubmitPayment, "SubmitThePaymentUrl")
 	startTask(CheckPaymentProcess, "CheckPaymentStatus")
 }
 
 func FroneEndDemo() {
-	//_offerid = "39488656244795"
-
 	startTask(CreatePaymentSession, "PaymentSession", true)   //Dont wait as we dont us this until the end.
 	startTask(ShopifyAddToCartStandard, "AddToCartId")        //we must wait for this as 1. Its basically the monitor and 2. It wont submit checkout form without this being complete
 	startTask(ExtractShippingRates, "GetShippingRates", true) //If we are here then ATC was succcess, run async as then if it fails it'll just fail later in the task anyway and its unrecoverable, no point in waiting.
