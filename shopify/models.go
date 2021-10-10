@@ -9,14 +9,13 @@ type Header struct {
 }
 
 type AddToCartStandardRequest struct {
-	FormType   string `json:"form_type"`
-	Utf8       string `json:"utf8"`
-	Properties struct {
-		BotKey string `json:"bot-key"`
-	} `json:"properties"`
-	OptionSize string `json:"option-Size"`
-	Id         string `json:"id"`
-	Quantity   string `json:"quantity"`
+	Id       string `json:"id"`
+	Quantity string `json:"quantity"`
+}
+
+type ChangeCartStandardRequest struct {
+	Id       string `json:"id"`
+	Quantity int    `json:"quantity"`
 }
 
 type ShippingRate struct {

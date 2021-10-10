@@ -2,7 +2,6 @@ package shopify
 
 import (
 	client "Golang-Sitescripts/client"
-	"fmt"
 )
 
 ///TODO:
@@ -12,9 +11,11 @@ import (
 //AddToCart add all response USE cases such as OOS, Sever not responding, Added to cart, Check quantity is correct
 
 //These are hard coded values which should come from the UI
-var host = "https://limitededt.com"
+var host = "https://shop.doverstreetmarket.com"
+var link = "https://shop.doverstreetmarket.com"
 var size = "7"
 var quantity = "1"
+var offerId = "41028462215324" //AKA Variant ID
 
 //Profile information
 var email = "JohnSmith5318008@gmail.com"
@@ -40,80 +41,51 @@ var ccv = "960"
 var authKey = ""
 var botKey = ""
 var gatewayKey = ""
-var offerId = "32521243820103" //AKA Variant ID
 var formUrl = ""
 var shipping_option = ""
 var total_amount = ""
 var payment_token = ""
 var process_url = ""
+var _offerid = ""
 
 //Entry point for Shopify Demo
 func Shopify() {
 	//Setup
 	client.SetupClient()
 
-	//Get the shopify page to set the bot-key used in addtoCart
-	fmt.Println("Getting shopify page")
-	if !ShopifyGetProductPage() {
-		fmt.Println("Failed to get page")
-	}
+	//PlayFunctions(ShopifyGetProductPage())
+	FroneEndDemo()
+}
 
-	//Get the payment session, we will need this later for the payment
-	if !CreatePaymentSession() {
-		fmt.Println("Failed to add to cart")
-	}
+var taskComplete = false
 
-	//Now the bot-key is set we add the product to cart
-	fmt.Println("Adding product to cart")
-	if !ShopifyAddToCartStandard() {
-		fmt.Println("Failed to add to cart")
-	}
+func FrontEndPreCartDemo() {
+	startTask(CreatePaymentSession, "PaymentSession")
+	_offerid = "32521243820103"
+	startTask(ShopifyAddToCartStandard, "AddToCartFakeId")
+	startTask(ExtractShippingRates, "GetShippingRates")
+	startTask(LoadCheckoutForm, "LoadCheckoutForm")
+	startTask(SubmitCustomerInfo, "SubmitTheCustomerInfo")
+	startTask(ExtractShippingToken, "ExtractTheShippingToken")
+	startTask(SubmitShippingMethodDetails, "SubmitShippingMethodDetails")
+	startTaskInt(ShopifyChangeCart, "RemoveFakeProductFromCart", 0)
+	_offerid = "39499044323399"
+	startTask(ShopifyAddToCartStandard, "AddToCartRealId")
+	startTask(ExtractPaymentGatewayId, "GetPaymentGatewayId")
+	startTask(SubmitPayment, "SubmitThePaymentUrl")
+	startTask(CheckPaymentProcess, "CheckPaymentStatus")
+}
 
-	//Get the shipping ID we need to submit shipping
-	fmt.Println("Grabbing the shipping id")
-	if !ExtractShippingRates() {
-		fmt.Println("Failed to get the shipping id")
-	}
-
-	//Load the checkout form so we can extract the AuthId
-	fmt.Println("Loading the checkoutForm")
-	if !LoadCheckoutForm() {
-		fmt.Println("Failed to load checkoutForm")
-	}
-
-	//Submit the profile information
-	fmt.Println("Submitting customer information")
-	if !SubmitCustomerInfo() {
-		fmt.Println("Failed to submit customer information")
-	}
-
-	//Get the shipping token we need to submit shipping
-	fmt.Println("Extacting the shipping token")
-	if !ExtractShippingToken() {
-		fmt.Println("Failed to extact the shipping token")
-	}
-
-	//Submit the shipping
-	fmt.Println("Submitting the shipping method details")
-	if !SubmitShippingMethodDetails() {
-		fmt.Println("Failed to submit the shipping method details")
-	}
-
-	//Get the payment gateway ID we need to process payment
-	fmt.Println("Extracting payment gateway Id")
-	if !ExtractPaymentGatewayId() {
-		fmt.Println("Failed to extract the payment gateway Id")
-	}
-
-	//Submit payment details
-	fmt.Println("Submitting payment details")
-	if !SubmitPayment() {
-		fmt.Println("Failed to submit payment details")
-	}
-
-	//Check if processing has finished and read result
-	fmt.Println("CheckPaymentProcess")
-	if !CheckPaymentProcess() {
-		fmt.Println("Payment isn't finished")
-	}
+func FroneEndDemo() {
+	//_offerid = "39488656244795"
+	startTask(CreatePaymentSession, "PaymentSession")
+	startTask(ShopifyAddToCartStandard, "AddToCartId")
+	startTask(ExtractShippingRates, "GetShippingRates")
+	startTask(LoadCheckoutForm, "LoadCheckoutForm")
+	startTask(SubmitCustomerInfo, "SubmitTheCustomerInfo")
+	startTask(ExtractShippingToken, "ExtractTheShippingToken")
+	startTask(SubmitShippingMethodDetails, "SubmitShippingMethodDetails")
+	startTask(ExtractPaymentGatewayId, "GetPaymentGatewayId")
+	startTask(SubmitPayment, "SubmitThePaymentUrl")
+	startTask(CheckPaymentProcess, "CheckPaymentStatus")
 }

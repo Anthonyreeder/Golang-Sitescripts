@@ -2,8 +2,10 @@ package shopify
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/anaskhan96/soup"
 )
@@ -52,13 +54,49 @@ func ExtractValue(body, elementType, targetType, typeValue string, optionalAttri
 		value = optionalAttribute[0]
 	}
 	_body := soup.HTMLParse(body)
-	element := _body.Find(elementType, targetType, typeValue).Pointer.Attr
-	for _, v := range element {
-		if v.Key == value {
-			//Locate the authKey attribute value within this node
-			val = v.Val
+	el := _body.Find(elementType, targetType, typeValue)
+	if el.Error == nil {
+		element := el.Pointer.Attr
+		for _, v := range element {
+			if v.Key == value {
+				//Locate the authKey attribute value within this node
+				val = v.Val
+			}
 		}
 	}
 
 	return val
+}
+
+//Task helpers, to loop functions and log failures to console
+func startTask(functionToRun func(), name string) {
+	taskComplete = false
+	fmt.Printf("Running task %s\n", name)
+	for {
+		functionToRun()
+		rand.Seed(time.Now().UnixNano())
+		r := rand.Intn(2000)
+		time.Sleep(time.Duration(r) * time.Millisecond)
+		if taskComplete {
+			break
+		} else {
+			fmt.Printf("%s task failed - retrying\n", name)
+		}
+	}
+}
+
+func startTaskInt(functionToRun func(int), name string, val int) {
+	taskComplete = false
+	fmt.Printf("Running task %s\n", name)
+	for {
+		functionToRun(val)
+		rand.Seed(time.Now().UnixNano())
+		r := rand.Intn(2000)
+		time.Sleep(time.Duration(r) * time.Millisecond)
+		if taskComplete {
+			break
+		} else {
+			fmt.Printf("%s task failed - retrying\n", name)
+		}
+	}
 }
