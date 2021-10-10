@@ -55,7 +55,7 @@ func ExtractValue(body, elementType, targetType, typeValue string, optionalAttri
 	}
 	_body := soup.HTMLParse(body)
 	el := _body.Find(elementType, targetType, typeValue)
-	if el.Error != nil {
+	if el.Error == nil {
 		element := el.Pointer.Attr
 		for _, v := range element {
 			if v.Key == value {

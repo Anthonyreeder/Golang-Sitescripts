@@ -154,6 +154,8 @@ func LoadCheckoutForm() {
 
 //POST the profile information
 func SubmitCustomerInfo() {
+	fmt.Println("Submitting customer information")
+
 	payload := url.Values{
 		"utf8":                                   {`\u2713`},
 		"_method":                                {"patch"},
@@ -205,6 +207,8 @@ func SubmitCustomerInfo() {
 //GET the shipping rates for this profile and extract the shipping id
 //There is an async POST method which may be quicker
 func ExtractShippingRates() {
+	fmt.Println("Grabbing the shipping id")
+
 	get := client.GET{
 		Endpoint: fmt.Sprintf("%s/cart/shipping_rates.json?shipping_address[zip]=%s&shipping_address[country]=%s&shipping_address[province]=%s", link, postal_code, country, province),
 	}
@@ -219,6 +223,11 @@ func ExtractShippingRates() {
 		//Decode the response into a json struct
 		shippingMethodResponse := ShippingMethodResponse{}
 		json.Unmarshal(respBytes, &shippingMethodResponse)
+
+		if len(shippingMethodResponse.ShippingRates) < 1 {
+			fmt.Println("No shipping, Probably profile is wrong or doesn't support this area/country/province")
+			return
+		}
 
 		//extract the name and price
 		name := strings.Replace(shippingMethodResponse.ShippingRates[0].Name, " ", "%20", -1)
@@ -282,7 +291,11 @@ func POSTExtractShippingRates() {
 
 //GET the next-step in shipping to extrac the shipping token
 func ExtractShippingToken() {
+	fmt.Println("Extacting the shipping token")
+
+	//reset global auth key
 	authKey = ""
+	//END
 
 	get := client.GET{
 		Endpoint: fmt.Sprintf("%s?step=shipping_method", formUrl),
@@ -314,6 +327,8 @@ func ExtractShippingToken() {
 
 //POST the shipping token and shipping ID
 func SubmitShippingMethodDetails() {
+	fmt.Println("Submitting the shipping method details")
+
 	payload := url.Values{
 		"utf8":                        {`\u2713`},
 		"_method":                     {"patch"},
@@ -351,7 +366,11 @@ func SubmitShippingMethodDetails() {
 
 //GET the payment_method values needed to submit a payment
 func ExtractPaymentGatewayId() {
+	fmt.Println("Extracting payment gateway Id")
+
+	//reset global auth key
 	authKey = ""
+	//END
 
 	get := client.GET{
 		Endpoint: fmt.Sprintf("%s?previous_step=shipping_method&step=payment_method", formUrl),
@@ -384,7 +403,10 @@ func ExtractPaymentGatewayId() {
 }
 
 func SubmitPayment() {
+	fmt.Println("Submitting payment details")
+
 	payload := url.Values{
+		//		"utf8": {"\u2713"},
 		"_method":                             {"patch"},
 		"authenticity_token":                  {authKey},
 		"previous_step":                       {"payment_method"},

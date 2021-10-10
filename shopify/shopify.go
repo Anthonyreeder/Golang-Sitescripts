@@ -11,10 +11,11 @@ import (
 //AddToCart add all response USE cases such as OOS, Sever not responding, Added to cart, Check quantity is correct
 
 //These are hard coded values which should come from the UI
-var host = "https://limitededt.com"
-var link = "https://limitededt.com"
+var host = "https://shop.doverstreetmarket.com"
+var link = "https://shop.doverstreetmarket.com"
 var size = "7"
 var quantity = "1"
+var offerId = "41028462215324" //AKA Variant ID
 
 //Profile information
 var email = "JohnSmith5318008@gmail.com"
@@ -40,7 +41,6 @@ var ccv = "960"
 var authKey = ""
 var botKey = ""
 var gatewayKey = ""
-var offerId = "32521243820103" //AKA Variant ID
 var formUrl = ""
 var shipping_option = ""
 var total_amount = ""
