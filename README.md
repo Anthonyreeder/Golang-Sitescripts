@@ -59,7 +59,7 @@ It has become clear that design between shopify sites despite using the same fra
   
   
 <details>
-  <summary>Start task helper</summary>
+  <summary>Start task implementation</summary>
   
  ![Alt text](images/startTaskImplement.png?raw=true "example")
   
