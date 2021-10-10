@@ -40,3 +40,8 @@ and here is an example of a GET and POST request using the current setup.
  ![Alt text](images/example.png?raw=true "example")
   
 </details>
+
+Tested with following shopify;
+https://shop.doverstreetmarket.com
+https://goodhoodstore.com
+https://limitededt.com
