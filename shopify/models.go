@@ -11,6 +11,7 @@ type Header struct {
 type AddToCartStandardRequest struct {
 	Id       string `json:"id"`
 	Quantity string `json:"quantity"`
+	FormType string `json:"form_type"` // "product",
 }
 
 type ChangeCartStandardRequest struct {
@@ -42,3 +43,22 @@ type CreditCard struct {
 type PaymentSessionResponse struct {
 	Id string `json:"id"`
 }
+
+type Product struct {
+	Products []ProductData `json:"products"`
+}
+type ProductData struct {
+	Id       int       `json:"id"`
+	Title    string    `json:"title"`
+	Handle   string    `json:"handle"`
+	Variants []Variant `json:"variants"`
+}
+
+type Variant struct {
+	Id        int    `json:"id"`
+	Title     string `json:"title"`
+	Sku       string `json:"sku"`
+	Available bool   `json:"available"`
+}
+
+type Products []ProductData

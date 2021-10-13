@@ -1,3 +1,5 @@
+github.com/Matthew17-21/Captcha-Tools/captchatools-go v0.0.0-20211007024052-aa05fb700e1d h1:ejPK2kYRxzXLeyk3v9NU+tulHuf+kyliR5dAXKMntS8=
+github.com/Matthew17-21/Captcha-Tools/captchatools-go v0.0.0-20211007024052-aa05fb700e1d/go.mod h1:ssyo15a8PpLGSgi8l6xS5T1N4VRK1MqoKUP4XEh/Kvc=
 github.com/anaskhan96/soup v1.2.4 h1:or+sKs9QbzJGZVTYFmTs2VBateEywoq00a6K14z331E=
 github.com/anaskhan96/soup v1.2.4/go.mod h1:6YnEp9A2yywlYdM4EgDz9NEHclocMepEtku7wg6Cq3s=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=

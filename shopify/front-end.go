@@ -13,8 +13,10 @@ import (
 	"github.com/anaskhan96/soup"
 )
 
-//GET Product page and extract bot-key
-func ShopifyGetProductPage() {
+//fastmode wallets/checkout endpoint
+
+//GET Product page front-end
+func ShopifyGetProductPageF() {
 	//Setup our GET request obj
 	get := client.GET{
 		Endpoint: fmt.Sprintf("%s/collections/mens/products/adidas-originals-pharrell-williams-boost-slides-fy6140", link),
@@ -23,22 +25,97 @@ func ShopifyGetProductPage() {
 	request := client.NewRequest(get)
 	//Add our headers to the HTTP Request obj
 	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
-	//Obtain the response
-	respBytes, resp := client.NewResponse(request)
+	//Obtain the responsey
+	_, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
 	case 200:
 
 		//Find the bot-key input field in the form
-		botKey = ExtractValue(string(respBytes), "input", "id", "bot-key")
+		//botKey = ExtractValue(string(respBytes), "input", "id", "bot-key")
 
 		//Check if botkey has a value now
-		if botKey != "" {
+		//	if botKey != "" {
+		taskComplete = true
+		return
+	////	} else {
+	//		fmt.Println("There was an issue getting the bot key")
+	//	}
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
+	}
+
+	taskComplete = false
+}
+
+//Gets a random product ID, If instock is true then the sku will be instock, if false it will search for oos.
+//This can be imrpoved alot though I doubt I ever will. This was just to make it faster to test multiple shopify sites without having to find new codes every time.
+//For record though:
+//It would be alot better to build an index of products internally run through ALL products once and catorgorise in-stock/oos.
+//Then in future you compare the jsons and see if they are changed. If they are you rebuild the index by comparing it to the original.
+func GetRandomId(instock bool) string {
+	//Setup our GET request obj
+	get := client.GET{
+		Endpoint: fmt.Sprintf("%s/products.json?limit=500&page=1&order=updated_at", link),
+	}
+	request := client.NewRequest(get)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		product := Product{}
+		json.Unmarshal(respBytes, &product)
+		skuToGrab := ""
+		for {
+			r := rand.Intn(len(product.Products))
+			if instock {
+				if product.Products[r].Variants[0].Available {
+					skuToGrab = fmt.Sprint(product.Products[r].Variants[0].Id)
+				}
+			} else {
+				if !product.Products[r].Variants[0].Available {
+					skuToGrab = fmt.Sprint(product.Products[r].Variants[0].Id)
+				}
+			}
+
+			if skuToGrab != "" {
+				break
+			}
+		}
+
+		return skuToGrab
+
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
+	}
+
+	taskComplete = false
+	return ""
+}
+
+func ShopifyGetProductPageB() {
+	//Setup our GET request obj
+	get := client.GET{
+		Endpoint: fmt.Sprintf("%s/products.json?limit=500&page=1&order=updated_at", link),
+	}
+	request := client.NewRequest(get)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		product := Product{}
+		json.Unmarshal(respBytes, &product)
+		test := GetProductInStock(product.Products, offerId).Title
+		if test != "" {
+			fmt.Println("Product found")
 			taskComplete = true
 			return
 		} else {
-			fmt.Println("There was an issue getting the bot key")
+			fmt.Println("Product NOT found")
 		}
+
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}
@@ -60,6 +137,7 @@ func ShopifyAddToCartStandard() {
 	payloadBytes, _ := json.Marshal(AddToCartStandardRequest{
 		Id:       addToCartId,
 		Quantity: quantity,
+		FormType: "product",
 	})
 
 	post := client.POST{

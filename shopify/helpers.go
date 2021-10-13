@@ -68,46 +68,37 @@ func ExtractValue(body, elementType, targetType, typeValue string, optionalAttri
 	return val
 }
 
-func startInGo(functionToRun func(), name string) {
-
-}
-
 //Task helpers, to loop functions and log failures to console
+//In future change this so FunctionToRun and Name are in a 'function' object WIll probably build on this in future.
 func startTask(functionToRun func(), name string, waitForResult ...bool) {
 	taskComplete = false
 	fmt.Printf("Running task %s\n", name)
 	if len(waitForResult) > 0 {
 		go func() {
-			for {
-				functionToRun()
-				rand.Seed(time.Now().UnixNano())
-				r := rand.Intn(2000)
-				time.Sleep(time.Duration(r) * time.Millisecond)
-				if taskComplete {
-					break
-				} else {
-					fmt.Printf("%s task failed - retrying\n", name)
-				}
-			}
+			loopFunction(functionToRun, name)
 		}()
 	} else {
-		for {
-			functionToRun()
-			rand.Seed(time.Now().UnixNano())
-			r := rand.Intn(2000)
-			time.Sleep(time.Duration(r) * time.Millisecond)
-			if taskComplete {
-				break
-			} else {
-				fmt.Printf("%s task failed - retrying\n", name)
-			}
+		loopFunction(functionToRun, name)
+	}
+}
+
+func loopFunction(functionToRun func(), name string) {
+	for {
+		functionToRun()
+		rand.Seed(time.Now().UnixNano())
+		r := rand.Intn(2000)
+		time.Sleep(time.Duration(r) * time.Millisecond)
+		if taskComplete {
+			break
+		} else {
+			fmt.Printf("%s task failed - retrying\n", name)
 		}
 	}
 }
 
 func startTaskInt(functionToRun func(int), name string, val int) {
 	taskComplete = false
-	fmt.Printf("Running task %s\n", name)
+	//fmt.Printf("Running task %s\n", name)
 	for {
 		functionToRun(val)
 		rand.Seed(time.Now().UnixNano())
@@ -119,4 +110,18 @@ func startTaskInt(functionToRun func(int), name string, val int) {
 			fmt.Printf("%s task failed - retrying\n", name)
 		}
 	}
+}
+
+//Gets the product and checks if its in stock
+func GetProductInStock(p Products, sku string) ProductData {
+	for _, product := range p {
+		for _, variant := range product.Variants {
+			if fmt.Sprint(variant.Id) == sku {
+				if variant.Available {
+					return product
+				}
+			}
+		}
+	}
+	return ProductData{Title: ""}
 }
