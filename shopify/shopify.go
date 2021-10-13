@@ -110,11 +110,11 @@ func Shopify() {
 	//Setup
 	client.SetupClient()
 
-	host = "https://www.xhibition.co/"
-	link = "https://www.xhibition.co/"
+	host = "https://limitededt.com/"
+	link = "https://limitededt.com/"
 
 	offerId = GetRandomId(true)
-	FroneEndDemo()
+	FrontEndPreCartDemo()
 
 }
 
@@ -136,7 +136,8 @@ func FrontEndPreCartDemo() {
 	startTaskInt(ShopifyChangeCart, "RemoveFakeProductFromCart", 0)
 
 	//Now we set our offerID to the REAL pid and attempt to add to cart
-	offerId = "39499044323399"
+	offerId = GetRandomId(false) //get an outofstock item
+	startTask(ShopifyGetProductPageB, "Checking for product")
 	startTask(ShopifyAddToCartStandard, "AddToCartRealId")
 	startTask(ExtractPaymentGatewayId, "GetPaymentGatewayId", true)
 	startTask(SubmitPayment, "SubmitThePaymentUrl")
