@@ -20,8 +20,11 @@ type ChangeCartStandardRequest struct {
 }
 
 type ShippingRate struct {
-	Name  string `json:"name"`
-	Price string `json:"price"`
+	Name   string `json:"name"`
+	Price  string `json:"price"`
+	Source string `json:"source"`
+	Code   string `json:"code"`
+	Markup string `json:"markup"`
 }
 
 type ShippingMethodResponse struct {

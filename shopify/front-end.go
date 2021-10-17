@@ -310,11 +310,16 @@ func ExtractShippingRates() {
 		}
 
 		//extract the name and price
-		name := strings.Replace(shippingMethodResponse.ShippingRates[0].Name, " ", "%20", -1)
+		//	name := strings.Replace(shippingMethodResponse.ShippingRates[0].Name, " ", "%20", -1)
+		//	price := shippingMethodResponse.ShippingRates[0].Price
 		price := shippingMethodResponse.ShippingRates[0].Price
-
+		code := strings.Replace(shippingMethodResponse.ShippingRates[0].Code, " ", "%20", -1)
+		source := shippingMethodResponse.ShippingRates[0].Source
 		//# Generate the shipping id to submit with checkout
-		shipping_option = "shopify-" + name + "-" + price
+		shipping_option = source + "-" + code + "-" + price //name + "-" + price
+		if strings.Contains(host, "shoepalace") {
+			shipping_option = "shopify-Flat%20Rate-1000.00"
+		}
 		if shipping_option != "" {
 			taskComplete = true
 			return
@@ -410,10 +415,9 @@ func SubmitShippingMethodDetails() {
 	fmt.Println("Submitting the shipping method details")
 
 	payload := url.Values{
-		"utf8":                        {`\u2713`},
 		"_method":                     {"patch"},
 		"authenticity_token":          {authKey},
-		"previous_step":               {"contact_information"},
+		"previous_step":               {"shipping_method"},
 		"step":                        {"payment_method"},
 		"checkout[shipping_rate][id]": {shipping_option},
 		"checkout[client_details][browser_width]":      {"1029"},
@@ -430,12 +434,18 @@ func SubmitShippingMethodDetails() {
 	}
 
 	request := client.NewRequest(post)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
-	_, resp := client.NewResponse(request)
+	request.Header = AddHeadersTest(Header{cookie: []string{}, content: nil}, host)
+	respBytes, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
 	case 200:
-		taskComplete = true
+		if strings.Contains(string(respBytes), "Error - Shipping") {
+			fmt.Println("Shipping option failed")
+			ExtractShippingRates()
+			taskComplete = false
+		} else {
+			taskComplete = true
+		}
 		return
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, post.Endpoint)

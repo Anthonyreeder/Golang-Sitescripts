@@ -10,6 +10,48 @@ import (
 	"github.com/anaskhan96/soup"
 )
 
+func AddHeadersTest(header Header, host string) http.Header {
+	var x = http.Header{
+		"origin":                    {host},
+		"sec-ch-ua":                 {"\"Chromium\";v=\"92\", \" Not A;Brand\";v=\"99\", \"Google Chrome\";v=\"92\""},
+		"sec-ch-ua-mobile":          {"?0"},
+		"Upgrade-Insecure-Requests": {"1"},
+		"User-Agent":                {"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36"},
+		"Sec-Fetch-Site":            {"same-origin"},
+		"Sec-Fetch-Mode":            {"navigate"},
+		"Sec-Fetch-User":            {"?1"},
+		"Sec-Fetch-Dest":            {"document"},
+		"sec-ch-ua-platform":        {"Windows"},
+		"accept-language":           {"en-GB,en-US;q=0.9,en;q=0.8"},
+		"cache-control":             {"max-age=0"},
+		"referer":                   {"https://feature.com/"},
+		"accept":                    {"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"},
+	}
+
+	if header.content != nil {
+		x.Set("Content-Length", fmt.Sprint(header.content.Size()))
+	}
+
+	if header.contentType == "json" {
+		x.Set("content-type", "application/json")
+	} else if header.contentType == "multipart" {
+		x.Set("content-type", "multipart/form-data; boundary=----WebKitFormBoundary45pI4iftSbnzXGQ1")
+
+	} else {
+		x.Set("content-type", "application/x-www-form-urlencoded")
+	}
+
+	if len(header.cookie) > 0 {
+		buildString := ""
+		for i := 0; i < len(header.cookie); i++ {
+			buildString += header.cookie[i] + "; "
+		}
+		x.Set("Cookie", buildString+strings.Join(x.Values("Cookie"), "; "))
+	}
+
+	return x
+}
+
 //Default headers with functionality to set the host, content type and add 1-off hard-coded cookies.
 func AddHeaders(header Header, host string) http.Header {
 	var x = http.Header{

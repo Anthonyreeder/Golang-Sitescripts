@@ -10,35 +10,36 @@ import (
 //Ones that are success but fail checkpayment, i need to check the HTML and see whats different. Hopefully they are at least uniform (or some are) in structure.
 //Complete fails are likely anti bot or incorrect urls. Need to use charles on these.
 /*
-atmos - https://www.atmosusa.com/ -> 					100% Success
-bdgastore - https://bdgastore.com/ -> 					100% Success
-bb branded - https://www.bbbranded.com/ -> 				100% Success
-blends US - https://www.blendsus.com/ -> 				100% Success
-coporategotem -> https://corporategotem.com -> 			100% Success
-dopefactory - https://www.dope-factory.com/ -> 			100% Success
-deadstock - https://www.deadstockofficial.com/ -> 		100% Success
-Limited Edition - https://limitededt.com/ -> 			100% Success
-goodhood - https://goodhoodstore.com/ -> 				100% Success
-sneakerboxshop.ca - https://sneakerboxshop.ca/ -> 		100% success
-Xhibition - https://www.xhibition.co/ -> 				100% success
-juicestore - https://juicestore.com/ ->  				100% Success
-Public school NY - https://www.publicschoolnyc.com/ -> 	100% Success
-saintalfred - https://www.saintalfred.com/ -> 			100% Success
-Sneaker Politics - https://sneakerpolitics.com/ -> 		100% Success
-apbstore - https://www.apbstore.com/ -> 				100% Success
-social status - https://www.socialstatuspgh.com/ -> 	100% Success
+1. atmos - https://www.atmosusa.com/ -> 					100% Success
+2. bdgastore - https://bdgastore.com/ -> 					100% Success
+3. bb branded - https://www.bbbranded.com/ -> 				100% Success
+4. blends US - https://www.blendsus.com/ -> 				100% Success
+5. coporategotem -> https://corporategotem.com -> 			100% Success
+6. dopefactory - https://www.dope-factory.com/ -> 			100% Success
+7. deadstock - https://www.deadstockofficial.com/ -> 		100% Success
+8. Limited Edition - https://limitededt.com/ -> 			100% Success
+9. goodhood - https://goodhoodstore.com/ -> 				100% Success
+10. sneakerboxshop.ca - https://sneakerboxshop.ca/ -> 		100% success
+11. Xhibition - https://www.xhibition.co/ -> 				100% success
+12. juicestore - https://juicestore.com/ ->  				100% Success
+13. Public school NY - https://www.publicschoolnyc.com/ -> 	100% Success
+14. saintalfred - https://www.saintalfred.com/ -> 			100% Success
+15. Sneaker Politics - https://sneakerpolitics.com/ -> 		100% Success
+16. apbstore - https://www.apbstore.com/ -> 				100% Success
+17. social status - https://www.socialstatuspgh.com/ -> 	100% Success
+18. culturekings -> https://www.culturekings.com -> 		100% Success
+19. feature - https://feature.com/ -> 					100% Success but could use optimising
+20. Closet Inc - https://www.theclosetinc.com/ -> 		100% Success but could use optimising
+21. shoepalace - https://www.shoepalace.com/ -> 		100% success
+22. dtlr - https://www.dtlr.com/ -> 					100% success
+23. ficegallery - https://www.ficegallery.com/ -> 		100% success
+24. just don - https://justdon.com/ -> 					100% success
+25. solefiness - https://www.solefiness.com/ -> 		100% success
 
 smets.lu - https://smets.lu/ -> 					Paypal only
 burn rubber - https://burnrubbersneakers.com/ -> 	Paypal only
 sole steal - https://www.solesteals.com/ -> 		Paypal only
-
-Closet Inc - https://www.theclosetinc.com/ -> 		Checkout Response won't progress past processing.
-culturekings -> https://www.culturekings.com -> 	Checkout Response won't progress past processing.
-dtlr - https://www.dtlr.com/ -> 					Checkout Response won't progress past processing.
-ficegallery - https://www.ficegallery.com/ -> 		Checkout Response won't progress past processing.
-feature - https://feature.com/ -> 					Checkout Response won't progress past processing.
-just don - https://justdon.com/ -> 					Checkout Response won't progress past processing.
-shoepalace - https://www.shoepalace.com/ -> 		Checkout Response won't progress past processing.
+	lustmexico - https://www.lustmexico.com/ -> 	Paypal only
 
 Noirfonce EU - https://www.noirfonce.eu/ -> 		3DS (Confirm payment in revolut)
 hanon shop - https://www.hanon-shop.com/ -> 		3DS (Confirm payment in revolut)
@@ -62,13 +63,10 @@ NIce Kick - https://www.nicekicks.com/ -> 						Antibot/Password or offline
 ronniefieg - https://shop.ronniefieg.com/ -> 					Antibot/Password or offline
 Dover street market - https://london.doverstreetmarket.com/ -> 	Antibot/Password or offline
 
-
-solefiness - https://www.solefiness.com/ -> 		Fails on get shipping ID for USA canada and singapor
-lustmexico - https://www.lustmexico.com/ -> 		Fails on get shipping ID for USA canada and singapor
-ovo - https://uk.octobersveryown.com/ -> 			Fails on get shipping ID for USA canada and singapour
-oneblock down - https://eu.oneblockdown.it/ -> 		Fails on get shipping ID for USA canada and singapour
-Packershoes - https://packershoes.com/ -> 			Fails on get shipping ID for USA canada and singapour
-Suede Store - https://suede-store.com/ -> 			Fails on get shipping ID for USA canada and singapour
+	ovo - https://uk.octobersveryown.com/ -> 			Fails on get shipping ID for USA canada and singapour
+	oneblock down - https://eu.oneblockdown.it/ -> 		Fails on get shipping ID for USA canada and singapour
+	Packershoes - https://packershoes.com/ -> 			Fails on get shipping ID for USA canada and singapour
+	Suede Store - https://suede-store.com/ -> 			Fails on get shipping ID for USA canada and singapour
 
 Trophy Room - https://www.trophyroomstore.com/ -> 	Fails submitting customer information
 
@@ -78,8 +76,8 @@ Trophy Room - https://www.trophyroomstore.com/ -> 	Fails submitting customer inf
 
 */
 //These are hard coded values which should come from the UI
-var host = "https://feature.com/"
-var link = "https://feature.com/"
+var host = "https://www.solefiness.com"
+var link = "https://www.solefiness.com"
 var size = "7"
 var quantity = "1"
 var offerId = "39503380250695" //AKA Variant ID
@@ -110,7 +108,7 @@ var profile = profiles.Profiles{}
 //Entry point for Shopify Demo
 func Shopify() {
 	//Set Profile
-	profile = profiles.UsaProfile()
+	profile = profiles.CanadaProfile()
 
 	//Setup
 	client.SetupClient()
