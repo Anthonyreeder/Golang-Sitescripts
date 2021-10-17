@@ -134,6 +134,8 @@ func ShopifyAddToCartStandard() {
 		addToCartId = offerId
 	}
 
+	fmt.Println(addToCartId)
+
 	payloadBytes, _ := json.Marshal(AddToCartStandardRequest{
 		Id:       addToCartId,
 		Quantity: quantity,
@@ -240,19 +242,19 @@ func SubmitCustomerInfo() {
 		"authenticity_token":                     {authKey},
 		"previous_step":                          {"contact_information"},
 		"step":                                   {"shipping_method"},
-		"checkout[email]":                        {email},
+		"checkout[email]":                        {profile.Email},
 		"checkout[buyer_accepts_marketing]":      {"1"},
 		"checkout[pickup_in_store][selected]":    {"false"},
-		"checkout[shipping_address][first_name]": {fname},
-		"checkout[shipping_address][last_name]":  {lname},
-		"checkout[shipping_address][company]":    {company},
-		"checkout[shipping_address][address1]":   {addy1},
-		"checkout[shipping_address][address2]":   {addy2},
-		"checkout[shipping_address][city]":       {city},
-		"checkout[shipping_address][country]":    {country},
-		"checkout[shipping_address][province]":   {province},
-		"checkout[shipping_address][zip]":        {postal_code},
-		"checkout[shipping_address][phone]":      {phone},
+		"checkout[shipping_address][first_name]": {profile.FirstName},
+		"checkout[shipping_address][last_name]":  {profile.LastName},
+		"checkout[shipping_address][company]":    {profile.Company},
+		"checkout[shipping_address][address1]":   {profile.Address1},
+		"checkout[shipping_address][address2]":   {profile.Address2},
+		"checkout[shipping_address][city]":       {profile.City},
+		"checkout[shipping_address][country]":    {profile.Country},
+		"checkout[shipping_address][province]":   {profile.Province},
+		"checkout[shipping_address][zip]":        {profile.PostCode},
+		"checkout[shipping_address][phone]":      {profile.Phone},
 		// "g-recaptcha-response": captcha_token,
 		"checkout[client_details][browser_width]":      {"1029"},
 		"checkout[client_details][browser_height]":     {"937"},
@@ -288,7 +290,7 @@ func ExtractShippingRates() {
 	fmt.Println("Grabbing the shipping id")
 
 	get := client.GET{
-		Endpoint: fmt.Sprintf("%s/cart/shipping_rates.json?shipping_address[zip]=%s&shipping_address[country]=%s&shipping_address[province]=%s", link, postal_code, country, province),
+		Endpoint: fmt.Sprintf("%s/cart/shipping_rates.json?shipping_address[zip]=%s&shipping_address[country]=%s&shipping_address[province]=%s", link, profile.PostCode, profile.Country, profile.Province),
 	}
 
 	request := client.NewRequest(get)
@@ -329,9 +331,9 @@ func ExtractShippingRates() {
 //There is an async POST method which may be quicker
 func POSTExtractShippingRates() {
 	payload := url.Values{
-		"shipping_address[zip]":      {postal_code},
-		"shipping_address[country]":  {country},
-		"shipping_address[province]": {province},
+		"shipping_address[zip]":      {profile.PostCode},
+		"shipping_address[country]":  {profile.Country},
+		"shipping_address[province]": {profile.Province},
 	}
 
 	post := client.POSTUrlEncoded{
@@ -539,9 +541,14 @@ func CheckPaymentProcess() {
 	case 200:
 		if !strings.Contains(resp.Request.URL.String(), "processing") {
 			_body := soup.HTMLParse(string(respBytes))
-			messageResponse := _body.Find("p", "class", "notice__text").Text()
-			fmt.Printf("Checkout response: %s", messageResponse)
-			taskComplete = true
+			messageResponse := _body.Find("p", "class", "notice__text")
+			var textResponse = ""
+			if messageResponse.Error == nil {
+				textResponse = messageResponse.Text()
+				taskComplete = true
+			}
+			fmt.Printf("Checkout response: %s", textResponse)
+
 			return
 		}
 

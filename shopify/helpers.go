@@ -31,6 +31,9 @@ func AddHeaders(header Header, host string) http.Header {
 
 	if header.contentType == "json" {
 		x.Set("content-type", "application/json")
+	} else if header.contentType == "multipart" {
+		x.Set("content-type", "multipart/form-data; boundary=----WebKitFormBoundary45pI4iftSbnzXGQ1")
+
 	} else {
 		x.Set("content-type", "application/x-www-form-urlencoded")
 	}

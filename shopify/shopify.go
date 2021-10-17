@@ -2,6 +2,7 @@ package shopify
 
 import (
 	client "Golang-Sitescripts/client"
+	profiles "Golang-Sitescripts/profiles"
 )
 
 ///TODO:
@@ -9,79 +10,79 @@ import (
 //Ones that are success but fail checkpayment, i need to check the HTML and see whats different. Hopefully they are at least uniform (or some are) in structure.
 //Complete fails are likely anti bot or incorrect urls. Need to use charles on these.
 /*
-A ma maniere - https://www.a-ma-maniere.com/ -> Fails on Submitting the shipping method.
-apbstore - https://www.apbstore.com/ -> Success but 'CheckPaymentStatus' throws Soup error (html parse)
-atmos - https://www.atmosusa.com/ -> Fails on 'GetShippingRates' -> Likely because its USA and I think they use another URL (I have this somewhere)
-bdgastore - https://bdgastore.com/ -> 100% Success
-bb branded - https://www.bbbranded.com/ -> Fails on 'GetShippingRates' -> Country not supported
-burn rubber - https://burnrubbersneakers.com/ -> Success but 'CheckPaymentStatus' throws Soup error
-blends US - https://www.blendsus.com/ -> 100% Success
-bouncewear - https://bouncewear.com/ -> Fails on LoadCheckoutForm (Require login maybe?)
-concepts - https://cncpts.com/ -> complete fail won't get product (antibot?)
-Closet Inc - https://www.theclosetinc.com/ -> Fails on GetShippingRates
-cpfm - https://cactusplantfleamarket.com/ -> Site seems to be offline
-culturekings -> https://www.culturekings.com -> Fails on GetShippingRates
-coporategotem -> https://corporategotem.com/ -> Fails on GetShippingRates
-Dover street market (US/UK/JP/SG) - https://london.doverstreetmarket.com/ -> Complete fail cant find products
-deadstock - https://www.deadstockofficial.com/ -> 100% Success
-dtlr - https://www.dtlr.com/ -> Fails on GetShippingRates
-DDT - https://ddtstore.com/password -> Fails to get product
-dopefactory - https://www.dope-factory.com/ -> 100% Success
-exclusity life - https://shop.exclucitylife.com/ -> Fails on get shipping ID
-Funko - https://www.funko.com/ -> Fails to get product (anti bot?)
-ficegallery - https://www.ficegallery.com/ -> Fails on get shipping ID
-feature - https://feature.com/ -> Success but 'CheckPaymentStatus' throws soup error
-goodhood - https://goodhoodstore.com/ -> Fails on get shipping ID
-haven - https://havenshop.com/ -> Fails, I thnk this URL is wrong
-hanon shop - https://www.hanon-shop.com/ -> Success but 'CheckPaymentStatus' throws soup error
-jimmyjazz - https://www.jimmyjazz.com/ -> Fails on get shipping ID
-just don - https://justdon.com/ -> Success but 'CheckPaymentStatus' throws soup error
-juicestore - https://juicestore.com/ -> 100% Success
-kawsone - https://kawsone.com/ -> Site is offline
-kith - https://kith.com/ -> Failed on Submit customer info
-Limited Edition - https://limitededt.com/ -> 100% Success
-lustmexico - https://www.lustmexico.com/ -> Fails on get shipping ID
-Noirfonce EU - https://www.noirfonce.eu/ -> Success but 'CheckPaymentStatus' throws soup error
-NIce Kick - https://www.nicekicks.com/ -> Can't get product
-ovo - https://uk.octobersveryown.com/ -> Fails on get shipping ID
-oneblock down - https://eu.oneblockdown.it/ -> Fails on get shipping ID
-Public school NY - https://www.publicschoolnyc.com/ -> 100% Success
-Packershoes - https://packershoes.com/ -> Fails on get shipping ID
-	Palace SB - https://www.palaceskateboards.com -> cannot get product 404 (URL is wrong)
-ronniefieg - https://shop.ronniefieg.com/ -> cannot get product
-Sneaker Politics - https://sneakerpolitics.com/ -> Fails on get shipping ID
-Suede Store - https://suede-store.com/ -> Fails on get shipping ID
-social status PGH - https://www.socialstatuspgh.com/ -> Success but 'CheckPaymentStatus' throws soup error
-sole steal - https://www.solesteals.com/ -> Fails on get shipping ID
-sneakerboxshop.ca - https://sneakerboxshop.ca/ -> 100% success
-solefiness - https://www.solefiness.com/ -> Success but 'CheckPaymentStatus' throws soup error
-saintalfred - https://www.saintalfred.com/ -> Fails on get shipping ID
-shoepalace - https://www.shoepalace.com/ -> Fails on get shipping ID
-smets.lu - https://smets.lu/ -> Success but 'CheckPaymentStatus' throws soup error
-travis scott - https://www.travisscott.com/ -> Cant get product
-Trophy Room - https://www.trophyroomstore.com/ -> Fails on get shipping ID
-undefeated - https://undefeated.com/ -> Fails on get shipping ID
-Xhibition - https://www.xhibition.co/ -> 100% success
+atmos - https://www.atmosusa.com/ -> 					100% Success
+bdgastore - https://bdgastore.com/ -> 					100% Success
+bb branded - https://www.bbbranded.com/ -> 				100% Success
+blends US - https://www.blendsus.com/ -> 				100% Success
+coporategotem -> https://corporategotem.com -> 			100% Success
+dopefactory - https://www.dope-factory.com/ -> 			100% Success
+deadstock - https://www.deadstockofficial.com/ -> 		100% Success
+Limited Edition - https://limitededt.com/ -> 			100% Success
+goodhood - https://goodhoodstore.com/ -> 				100% Success
+sneakerboxshop.ca - https://sneakerboxshop.ca/ -> 		100% success
+Xhibition - https://www.xhibition.co/ -> 				100% success
+juicestore - https://juicestore.com/ ->  				100% Success
+Public school NY - https://www.publicschoolnyc.com/ -> 	100% Success
+saintalfred - https://www.saintalfred.com/ -> 			100% Success
+Sneaker Politics - https://sneakerpolitics.com/ -> 		100% Success
+apbstore - https://www.apbstore.com/ -> 				100% Success
+social status - https://www.socialstatuspgh.com/ -> 	100% Success
+
+smets.lu - https://smets.lu/ -> 					Paypal only
+burn rubber - https://burnrubbersneakers.com/ -> 	Paypal only
+sole steal - https://www.solesteals.com/ -> 		Paypal only
+
+Closet Inc - https://www.theclosetinc.com/ -> 		Checkout Response won't progress past processing.
+culturekings -> https://www.culturekings.com -> 	Checkout Response won't progress past processing.
+dtlr - https://www.dtlr.com/ -> 					Checkout Response won't progress past processing.
+ficegallery - https://www.ficegallery.com/ -> 		Checkout Response won't progress past processing.
+feature - https://feature.com/ -> 					Checkout Response won't progress past processing.
+just don - https://justdon.com/ -> 					Checkout Response won't progress past processing.
+shoepalace - https://www.shoepalace.com/ -> 		Checkout Response won't progress past processing.
+
+Noirfonce EU - https://www.noirfonce.eu/ -> 		3DS (Confirm payment in revolut)
+hanon shop - https://www.hanon-shop.com/ -> 		3DS (Confirm payment in revolut)
+
+undefeated - https://undefeated.com/ -> 			Requires login
+A ma maniere - https://www.a-ma-maniere.com/ -> 	Requires login
+bouncewear - https://bouncewear.com/ -> 			Requires login
+exclusity life - https://shop.exclucitylife.com/ -> Requires login
+jimmyjazz - https://www.jimmyjazz.com -> 			Requires login
+kith - https://kith.com/ -> 						Requires login
+
+concepts - https://cncpts.com/ -> 								Antibot/Password or offline
+Funko - https://www.funko.com/ -> 								Antibot/Password or offline
+haven - https://havenshop.com/ -> 								Antibot/Password or offline
+	Palace SB - https://www.palaceskateboards.com ->			Antibot/Password or offline
+travis scott - https://www.t qravisscott.com/ -> 				Antibot/Password or offline
+cpfm - https://cactusplantfleamarket.com/ -> 					Antibot/Password or offline
+DDT - https://ddtstore.com/password -> 							Antibot/Password or offline
+kawsone - https://kawsone.com/ -> 								Antibot/Password or offline
+NIce Kick - https://www.nicekicks.com/ -> 						Antibot/Password or offline
+ronniefieg - https://shop.ronniefieg.com/ -> 					Antibot/Password or offline
+Dover street market - https://london.doverstreetmarket.com/ -> 	Antibot/Password or offline
+
+
+solefiness - https://www.solefiness.com/ -> 		Fails on get shipping ID for USA canada and singapor
+lustmexico - https://www.lustmexico.com/ -> 		Fails on get shipping ID for USA canada and singapor
+ovo - https://uk.octobersveryown.com/ -> 			Fails on get shipping ID for USA canada and singapour
+oneblock down - https://eu.oneblockdown.it/ -> 		Fails on get shipping ID for USA canada and singapour
+Packershoes - https://packershoes.com/ -> 			Fails on get shipping ID for USA canada and singapour
+Suede Store - https://suede-store.com/ -> 			Fails on get shipping ID for USA canada and singapour
+
+Trophy Room - https://www.trophyroomstore.com/ -> 	Fails submitting customer information
+
+//3ds example
+//https://hooks.stripe.com/3d_secure_2/hosted?merchant=acct_1C83vfGrEnQm9AGb&payment_intent=pi_3JlXbXGrEnQm9AGb0nu3fZPn&payment_intent_client_secret=pi_3JlXbXGrEnQm9AGb0nu3fZPn_secret_AdnH8n9tl8YVOQBoLw35zxSOz&publishable_key=pk_live_514ke48A5jVMTWATl9JUuGyfmMtf4ldHKrk2CqII9VWHasHtbxEiJHUpkZaOq8TXIc1dAGgs3zh1zkKOMmZRheQ0I00MBg2eNi8&source=src_1JlXbYGrEnQm9AGbXkaJDNI8&stripe_account=acct_1C83vfGrEnQm9AGb
+
+
 */
 //These are hard coded values which should come from the UI
-var host = "https://limitededt.com/"
-var link = "https://limitededt.com/"
+var host = "https://feature.com/"
+var link = "https://feature.com/"
 var size = "7"
 var quantity = "1"
 var offerId = "39503380250695" //AKA Variant ID
-
-//Profile information
-var email = "JohnSmith5318008@gmail.com"
-var fname = "John"
-var lname = "Smith"
-var company = ""
-var addy1 = "37 Shenton Way"
-var addy2 = ""
-var city = ""
-var country = "Singapore"
-var postal_code = "068811"
-var phone = "68246580"
-var province = ""
 
 //Card details
 var cardNumber = "5354568000637394"
@@ -104,17 +105,18 @@ var _offerid = ""
 //Login details
 var loginEmail = "anthonyreeder123@gmail.com"
 var password = "Test123"
+var profile = profiles.Profiles{}
 
 //Entry point for Shopify Demo
 func Shopify() {
+	//Set Profile
+	profile = profiles.UsaProfile()
+
 	//Setup
 	client.SetupClient()
 
-	host = "https://limitededt.com/"
-	link = "https://limitededt.com/"
-
 	offerId = GetRandomId(true)
-	FrontEndPreCartDemo()
+	FroneEndDemo()
 
 }
 
