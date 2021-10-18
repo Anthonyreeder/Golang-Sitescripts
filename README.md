@@ -72,8 +72,64 @@ The reason I added this, certain requests we don't really care about waiting for
 </details>
 <p>
 <b>
-Tested with the following shopify<br>
+Tested with the following sites<br>
  </b>
-https://shop.doverstreetmarket.com<br>
-https://goodhoodstore.com<br>
-https://limitededt.com<br>
+
+  <b>Success</b>
+```  
+1. atmos - https://www.atmosusa.com/ ->               100% Success
+2. bdgastore - https://bdgastore.com/ ->              100% Success
+3. bb branded - https://www.bbbranded.com/ ->         100% Success
+4. blends US - https://www.blendsus.com/ ->           100% Success
+5. coporategotem -> https://corporategotem.com ->     100% Success
+6. dopefactory - https://www.dope-factory.com/ ->     100% Success
+7. deadstock - https://www.deadstockofficial.com/ ->  100% Success
+8. Limited Edition - https://limitededt.com/ ->       100% Success
+9. goodhood - https://goodhoodstore.com/ ->           100% Success
+10. sneakerboxshop.ca - https://sneakerboxshop.ca/ -> 100% success
+11. Xhibition - https://www.xhibition.co/ ->          100% success
+12. juicestore - https://juicestore.com/ ->           100% Success
+13. Public school NY - https://www.publicschoolnyc.com/ -> 100% Success
+14. saintalfred - https://www.saintalfred.com/ ->          100% Success
+15. Sneaker Politics - https://sneakerpolitics.com/ ->     100% Success
+16. apbstore - https://www.apbstore.com/ ->                100% Success
+17. social status - https://www.socialstatuspgh.com/ ->    100% Success
+18. culturekings -> https://www.culturekings.com ->        100% Success
+19. feature - https://feature.com/ ->                      100% Success but could use optimising
+20. Closet Inc - https://www.theclosetinc.com/ ->          100% Success but could use optimising
+21. shoepalace - https://www.shoepalace.com/ ->            100% success
+22. dtlr - https://www.dtlr.com/ ->                        100% success
+23. ficegallery - https://www.ficegallery.com/ ->          100% success
+24. just don - https://justdon.com/ ->                     100% success
+25. solefiness - https://www.solefiness.com/ ->            100% success
+```
+  <b> Failure/In works </b>
+```
+smets.lu - https://smets.lu/ ->                            Paypal only
+burn rubber - https://burnrubbersneakers.com/ ->           Paypal only
+sole steal - https://www.solesteals.com/ ->                Paypal only
+lustmexico - https://www.lustmexico.com/ ->                Paypal only
+Noirfonce EU - https://www.noirfonce.eu/ ->                3DS (Confirm payment in revolut)
+hanon shop - https://www.hanon-shop.com/ ->                3DS (Confirm payment in revolut)
+undefeated - https://undefeated.com/ ->                    Requires login
+A ma maniere - https://www.a-ma-maniere.com/ ->            Requires login
+bouncewear - https://bouncewear.com/ ->                    Requires login
+exclusity life - https://shop.exclucitylife.com/ ->        Requires login
+jimmyjazz - https://www.jimmyjazz.com ->                   Requires login
+kith - https://kith.com/ ->                                Requires login
+concepts - https://cncpts.com/ ->                          Antibot/Password or offline
+Funko - https://www.funko.com/ ->                          Antibot/Password or offline
+haven - https://havenshop.com/ ->                          Antibot/Password or offline
+Palace SB - https://www.palaceskateboards.com ->           Antibot/Password or offline
+travis scott - https://www.t qravisscott.com/ ->           Antibot/Password or offline
+cpfm - https://cactusplantfleamarket.com/ ->               Antibot/Password or offline
+DDT - https://ddtstore.com/password ->                     Antibot/Password or offline
+kawsone - https://kawsone.com/ ->                          Antibot/Password or offline
+NIce Kick - https://www.nicekicks.com/ ->                  Antibot/Password or offline
+ronniefieg - https://shop.ronniefieg.com/ ->               Antibot/Password or offline
+Dover street market - https://london.doverstreetmarket.com/ -> Antibot/Password or offline
+ovo - https://uk.octobersveryown.com/ ->                       Fails on get shipping ID for USA canada and singapour
+oneblock down - https://eu.oneblockdown.it/ ->                 Fails on get shipping ID for USA canada and singapour
+Packershoes - https://packershoes.com/ ->                      Fails on get shipping ID for USA canada and singapour
+Suede Store - https://suede-store.com/ ->                      Fails on get shipping ID for USA canada and singapour
+Trophy Room - https://www.trophyroomstore.com/ ->              Fails submitting customer information ```
