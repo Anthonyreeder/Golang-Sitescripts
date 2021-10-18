@@ -1,13 +1,19 @@
 package shopify
 
 import (
+	"context"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/anaskhan96/soup"
+	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/chromedp"
 )
 
 func AddHeadersTest(header Header, host string) http.Header {
@@ -169,4 +175,89 @@ func GetProductInStock(p Products, sku string) ProductData {
 		}
 	}
 	return ProductData{Title: ""}
+}
+
+func PaypalCheckout() {
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.Flag("headless", false),
+		chromedp.Flag("disable-gpu", false),
+		chromedp.Flag("enable-automation", false),
+		chromedp.Flag("disable-extensions", false),
+	)
+
+	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+
+	// create context
+	ctx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
+	defer cancel()
+
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate(`https://www.google.com/`),
+		chromedp.Sleep(5000),
+	); err != nil {
+
+	}
+
+}
+
+func StartPaypalPayment(ppUrl string) {
+	dir, err := ioutil.TempDir("", "chromedp-example")
+	if err != nil {
+		panic(err)
+	}
+	defer os.RemoveAll(dir)
+
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.DisableGPU,
+		chromedp.NoDefaultBrowserCheck,
+		chromedp.Flag("headless", false),
+		chromedp.Flag("ignore-certificate-errors", true),
+		chromedp.Flag("window-size", "250,600"),
+		chromedp.UserDataDir(dir),
+	)
+
+	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+
+	// also set up a custom logger
+	taskCtx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
+	defer cancel()
+
+	// create a timeout
+	//taskCtx, cancel = context.WithTimeout(taskCtx, 10*time.Second)
+	//defer cancel()
+
+	// ensure that the browser process is started
+	if err := chromedp.Run(taskCtx); err != nil {
+		panic(err)
+	}
+
+	// listen network event
+	listenForNetworkEvent(taskCtx, cancel)
+
+	chromedp.Run(taskCtx,
+		network.Enable(),
+		chromedp.Navigate(ppUrl),
+		chromedp.WaitVisible(`poop`, chromedp.BySearch),
+	)
+
+}
+
+func listenForNetworkEvent(ctx context.Context, cancel context.CancelFunc) {
+	chromedp.ListenTarget(ctx, func(ev interface{}) {
+		switch ev := ev.(type) {
+
+		case *network.EventResponseReceived:
+			resp := ev.Response
+			if strings.Contains(resp.URL, "ThePaypalConfirmUrl") {
+				log.Printf("Confirmed paypal payment has been made")
+				cancel()
+			} else {
+				fmt.Println(resp.URL)
+			}
+
+		}
+		// other needed network Event
+	})
 }

@@ -41,6 +41,7 @@ burn rubber - https://burnrubbersneakers.com/ -> 	Paypal only
 sole steal - https://www.solesteals.com/ -> 		Paypal only
 	lustmexico - https://www.lustmexico.com/ -> 	Paypal only
 
+
 Noirfonce EU - https://www.noirfonce.eu/ -> 		3DS (Confirm payment in revolut)
 hanon shop - https://www.hanon-shop.com/ -> 		3DS (Confirm payment in revolut)
 
@@ -76,8 +77,8 @@ Trophy Room - https://www.trophyroomstore.com/ -> 	Fails submitting customer inf
 
 */
 //These are hard coded values which should come from the UI
-var host = "https://www.solefiness.com"
-var link = "https://www.solefiness.com"
+var host = "https://smets.lu"
+var link = "https://smets.lu"
 var size = "7"
 var quantity = "1"
 var offerId = "39503380250695" //AKA Variant ID
@@ -108,7 +109,7 @@ var profile = profiles.Profiles{}
 //Entry point for Shopify Demo
 func Shopify() {
 	//Set Profile
-	profile = profiles.CanadaProfile()
+	profile = profiles.UsaProfile()
 
 	//Setup
 	client.SetupClient()
@@ -126,10 +127,10 @@ var taskComplete = false
 func FrontEndPreCartDemo() {
 	startTask(CreatePaymentSession, "PaymentSession")
 	startTask(ShopifyAddToCartStandard, "AddToCartFakeId")
-	startTask(ExtractShippingRates, "GetShippingRates")
 	startTask(LoadCheckoutForm, "LoadCheckoutForm")
 	startTask(SubmitCustomerInfo, "SubmitTheCustomerInfo")
 	startTask(ExtractShippingToken, "ExtractTheShippingToken")
+	startTask(ExtractShippingRates, "GetShippingRates")
 	startTask(SubmitShippingMethodDetails, "SubmitShippingMethodDetails")
 
 	//The monitoring starts here. Now that the session has been created and payment agreement has been made. We remove the fakePID

@@ -527,8 +527,14 @@ func SubmitPayment() {
 
 	switch resp.StatusCode {
 	case 200:
-		process_url = resp.Request.URL.String()
-		taskComplete = true
+		if strings.Contains(resp.Request.URL.String(), "paypal.com") {
+			StartPaypalPayment(resp.Request.URL.String())
+			process_url = ""
+			taskComplete = true
+		} else {
+			process_url = resp.Request.URL.String()
+			taskComplete = true
+		}
 		return
 
 	default:
@@ -539,6 +545,11 @@ func SubmitPayment() {
 }
 
 func CheckPaymentProcess() {
+	if process_url == "" {
+		fmt.Println("Paypal Payment complete")
+		taskComplete = true
+		return
+	}
 	get := client.GET{
 		Endpoint: process_url,
 	}
