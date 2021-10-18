@@ -1,0 +1,5 @@
+package footsites
+
+func Footsites() {
+
+}
