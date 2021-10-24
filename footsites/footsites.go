@@ -12,17 +12,17 @@ import (
 	"time"
 )
 
-var profile = profiles.FootSitesProfile{}
+var profileInfo = profiles.FootSitesProfile{}
 var sessionInfo = profiles.FootSitesSessionInfo{}
 var offerId = "SIZE_1235010" //AKA Variant ID
-var datadomeCookie = "HPChBqWbMFz1DakQlcmJmqqYzxAzePLqRTrMh5cJklWeH9XYr9rK55jLVJ.n8sJejDMrV.Gs0MhTjhYaRQ-2OdL1NDs1QHFffX5EKowsN8"
+var datadomeCookie = "M7sTRtf1PAbvORz0hOCT.r-75jwAccJiuL5iHbb7ImffTFFY0-54snnMvCSLIIrI7D.tJOWOhVJU_qT1KR65fStUwUMydKgHG.XNb8AElo"
 
 func Footsites() {
 	client.SetupClient()
 
 	//Set Profile
 	sessionInfo = profiles.FootsitesSessionInfoUk()
-
+	profileInfo = profiles.FootSitesProfileUk()
 	//Setup
 	client.SetupClient()
 	tasks := Task{Host: "https://www.footlocker.co.uk", Link: "https://www.footlocker.co.uk"}
@@ -31,7 +31,8 @@ func Footsites() {
 	tasks.EncryptSessionId()
 	tasks.GetCSRF()
 	tasks.GetCart()
-
+	tasks.VerificationAddress()
+	tasks.PutMailFromVerificationAddress()
 	//
 	//Eastbay
 	//Champsports
@@ -223,12 +224,10 @@ func (t *Task) GetCart() bool {
 	},
 		cookie:  []string{"datadome=3X3o.gD~Y~m6PGoV.-Tu-sT210ZkST.T1Hh6E2FJsio4wkjOJbvrWNFQb.j4zbiPzw0mC8V2UsqxUzZOa8.iLlDAVWDFebpHpgXTVVm4iy"},
 		content: bytes.NewReader(payloadBytes), contentType: "json"}, "localhost")
-	respBytes, resp := client.NewResponse(request)
+	_, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
 	case 200:
-		fmt.Println(string(respBytes))
-		t.GenDeviceId = string(respBytes)
 		return true
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, t.CurrentTaskTemplate.name)
@@ -237,23 +236,25 @@ func (t *Task) GetCart() bool {
 	return false
 }
 
+//Read the 'decision' to see if its correct
+//Accepted = good
 func (t *Task) VerificationAddress() bool {
 	dateTimeStamp := time.Now().UTC().UnixNano()
 
 	payloadBytes, _ := json.Marshal(VerificationAddressPayload{
 		Country: Country{
-			IsoCode: "",
-			Name:    "",
+			IsoCodeCountryShipping: profileInfo.Shipping.IsoCodeCountryShipping,
+			NameCountryShipping:    profileInfo.Shipping.NameCountryShipping,
 		},
-		Line1:      "",
-		Line2:      "",
-		PostalCode: "",
-		Town:       "",
+		Line1Shipping:      profileInfo.Shipping.Line1Shipping,
+		Line2Shipping:      profileInfo.Shipping.Line2Shipping,
+		PostalCodeShipping: profileInfo.Shipping.PostalCodeShipping,
+		TownShipping:       profileInfo.Shipping.TownShipping,
 		Region: Region{
-			CountryIso:   "",
-			IsoCode:      "",
-			IsoCodeShort: "",
-			Name:         "",
+			CountryIsoRegionShipping: profileInfo.Shipping.CountryIsoRegionShipping,
+			IsoCodeRegionShipping:    profileInfo.Shipping.IsoCodeRegionShipping,
+			IsoCodeShortShipping:     profileInfo.Shipping.IsoCodeShortShippingShipping,
+			NameRegionShipping:       profileInfo.Shipping.NameRegionShipping,
 		},
 	})
 
@@ -272,12 +273,11 @@ func (t *Task) VerificationAddress() bool {
 	},
 		cookie:  []string{"datadome=3X3o.gD~Y~m6PGoV.-Tu-sT210ZkST.T1Hh6E2FJsio4wkjOJbvrWNFQb.j4zbiPzw0mC8V2UsqxUzZOa8.iLlDAVWDFebpHpgXTVVm4iy"},
 		content: bytes.NewReader(payloadBytes), contentType: "json"}, "localhost")
-	respBytes, resp := client.NewResponse(request)
+	_, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
 	case 200:
-		fmt.Println(string(respBytes))
-		t.GenDeviceId = string(respBytes)
+		//Read the 'decision' to see if its correct
 		return true
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, t.CurrentTaskTemplate.name)
@@ -286,22 +286,34 @@ func (t *Task) VerificationAddress() bool {
 	return false
 }
 
-type VerificationAddressPayload struct {
-	Country    Country
-	Line1      string
-	Line2      string
-	PostalCode string
-	Town       string
-	Region     Region
-}
-type Country struct {
-	IsoCode string
-	Name    string
-}
+//Dumb name, change this later
+//WE are getting 200 but empty body? Not sure if this is correct. Assume its correct for now.
+func (t *Task) PutMailFromVerificationAddress() bool {
+	dateTimeStamp := time.Now().UTC().UnixNano()
 
-type Region struct {
-	CountryIso   string
-	IsoCode      string
-	IsoCodeShort string
-	Name         string
+	put := client.PUT{
+		Endpoint: fmt.Sprintf("%s/api/users/carts/current/email/%s?timestamp=%d", t.Host, profileInfo.Person.Email, dateTimeStamp),
+	}
+
+	request := client.NewRequest(put)
+	request.Header = AddHeaders(Header{additionalHeaders: []additionalHeaders{
+		{key: "x-csrf-token", value: t.CsrfToken},
+		//{key: "x-fl-productid", value: offerId},
+		{key: "origin", value: "https://www.footlocker.co.uk"},
+		{key: "referer", value: fmt.Sprintf("%s/checkout", t.Host)},
+		{key: "x-api-lang", value: "en-gb"},
+	},
+		cookie:      []string{"datadome=3X3o.gD~Y~m6PGoV.-Tu-sT210ZkST.T1Hh6E2FJsio4wkjOJbvrWNFQb.j4zbiPzw0mC8V2UsqxUzZOa8.iLlDAVWDFebpHpgXTVVm4iy"},
+		contentType: "json"}, "localhost")
+	_, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		//Read the 'decision' to see if its correct
+		return true
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, t.CurrentTaskTemplate.name)
+	}
+
+	return false
 }

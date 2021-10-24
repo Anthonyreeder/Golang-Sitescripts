@@ -102,3 +102,22 @@ type GetCartRequest struct {
 	ProductId       string `json:"productId"`
 }
 
+type VerificationAddressPayload struct {
+	Country            Country `json:"country"`
+	Line1Shipping      string  `json:"line1"`
+	Line2Shipping      string  `json:"line2"`
+	PostalCodeShipping string  `json:"postalCode"`
+	TownShipping       string  `json:"town"`
+	Region             Region  `json:"region"`
+}
+type Country struct {
+	IsoCodeCountryShipping string `json:"isocode"`
+	NameCountryShipping    string `json:"name"`
+}
+
+type Region struct {
+	CountryIsoRegionShipping string `json:"countryIso"`
+	IsoCodeRegionShipping    string `json:"isocode"`
+	IsoCodeShortShipping     string `json:"isocodeShort"`
+	NameRegionShipping       string `json:"name"`
+}

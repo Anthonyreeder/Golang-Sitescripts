@@ -39,10 +39,10 @@ type FootSitesProfile struct {
 }
 
 type CardDetails struct {
-	Ccnumber   int
-	Expiry     int
-	ExpiryYear int
-	Cvc        int
+	Ccnumber   string
+	Expiry     string
+	ExpiryYear string
+	Cvc        string
 }
 type Person struct {
 	Email string
@@ -58,11 +58,11 @@ type Shipping struct {
 	TownShipping                 string
 	CountryIsoRegionShipping     string
 	IsoCodeRegionShipping        string
-	Isocodeshortshippingshipping string
-	Nameregionshipping           string
-	Isocodecountryshipping       string
-	Namecountryshipping          string
-	Isocodecountrybilling        string
+	IsoCodeShortShippingShipping string
+	NameRegionShipping           string
+	IsoCodeCountryShipping       string
+	NameCountryShipping          string
+	IsoCodeCountryBilling        string
 }
 
 type Billing struct {
