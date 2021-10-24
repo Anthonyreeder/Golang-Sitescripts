@@ -53,6 +53,7 @@ func ShopifyGetProductPageF() {
 //For record though:
 //It would be alot better to build an index of products internally run through ALL products once and catorgorise in-stock/oos.
 //Then in future you compare the jsons and see if they are changed. If they are you rebuild the index by comparing it to the original.
+
 func GetRandomId(instock bool) string {
 	//Setup our GET request obj
 	get := client.GET{
@@ -94,13 +95,13 @@ func GetRandomId(instock bool) string {
 	return ""
 }
 
-func ShopifyGetProductPageB() {
+func (t *Task) ShopifyGetProductPageB() bool {
 	//Setup our GET request obj
 	get := client.GET{
-		Endpoint: fmt.Sprintf("%s/products.json?limit=500&page=1&order=updated_at", link),
+		Endpoint: fmt.Sprintf("%s/products.json?limit=500&page=1&order=updated_at", t.link),
 	}
 	request := client.NewRequest(get)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, t.host)
 	respBytes, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
@@ -110,8 +111,8 @@ func ShopifyGetProductPageB() {
 		test := GetProductInStock(product.Products, offerId).Title
 		if test != "" {
 			fmt.Println("Product found")
-			taskComplete = true
-			return
+			t.currentTaskTemplate.complete = true
+			return true
 		} else {
 			fmt.Println("Product NOT found")
 		}
@@ -120,7 +121,7 @@ func ShopifyGetProductPageB() {
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
 	}
 
-	taskComplete = false
+	return false
 }
 
 //POST JSON data to the standard endpoint used on the browsers 'addToCart' button.
@@ -608,3 +609,7 @@ func ShopifyChangeCart(q int) {
 
 	taskComplete = false
 }
+
+// sync group - wake groups.
+// drcp
+// protobuff

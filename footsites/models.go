@@ -1,11 +1,22 @@
-package shopify
+package footsites
 
 import "bytes"
 
+type Request struct {
+	Request interface{}
+	Host    string
+}
+
 type Header struct {
-	cookie      []string
-	content     *bytes.Reader
-	contentType string
+	cookie            []string
+	additionalHeaders []additionalHeaders
+	content           *bytes.Reader
+	contentType       string
+}
+
+type additionalHeaders struct {
+	key   string
+	value string
 }
 
 type AddToCartStandardRequest struct {
@@ -80,7 +91,14 @@ type Profiles struct {
 	Province  string
 }
 
-type Request struct {
-	Request  interface{}
-	Endpoint string
+type CsrfResponse struct {
+	Data struct {
+		CsrfToken string `json:"csrfToken"`
+	}
 }
+
+type GetCartRequest struct {
+	ProductQuantity int    `json:"productQuantity"`
+	ProductId       string `json:"productId"`
+}
+
