@@ -79,3 +79,8 @@ type Profiles struct {
 	Phone     string
 	Province  string
 }
+
+type Request struct {
+	Request  interface{}
+	Endpoint string
+}

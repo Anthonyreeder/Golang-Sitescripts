@@ -11,4 +11,5 @@ require (
 	github.com/knq/sysutil v0.0.0-20181215143952-f05b59f0f307 // indirect
 	golang.org/x/image v0.0.0-20190417020941-4e30a6eb7d9a // indirect
 	golang.org/x/sys v0.0.0-20211015200801-69063c4bb744 // indirect
+	rogchap.com/v8go v0.6.0
 )

@@ -61,7 +61,7 @@ func AddHeadersTest(header Header, host string) http.Header {
 //Default headers with functionality to set the host, content type and add 1-off hard-coded cookies.
 func AddHeaders(header Header, host string) http.Header {
 	var x = http.Header{
-		"Host":                      {host},
+		"Origin":                    {host},
 		"sec-ch-ua":                 {"\"Chromium\";v=\"92\", \" Not A;Brand\";v=\"99\", \"Google Chrome\";v=\"92\""},
 		"sec-ch-ua-mobile":          {"?0"},
 		"Upgrade-Insecure-Requests": {"1"},
@@ -260,4 +260,42 @@ func listenForNetworkEvent(ctx context.Context, cancel context.CancelFunc) {
 		}
 		// other needed network Event
 	})
+}
+
+type TaskTemplate struct {
+	functionToRun func() bool
+	name          string
+	complete      bool
+	concurrent    bool
+	delay         time.Duration
+}
+
+type Task struct {
+	TaskTemplates       []TaskTemplate
+	currentTaskTemplate TaskTemplate
+	link                string
+	host                string
+}
+
+func runTasks(task Task) {
+	for _, element := range task.TaskTemplates {
+		//For each function to run within the task
+		task.currentTaskTemplate = element
+		loopFunctionB(task.currentTaskTemplate)
+	}
+}
+
+func loopFunctionB(task TaskTemplate) {
+	for {
+		taskResult := task.functionToRun()
+		rand.Seed(time.Now().UnixNano())
+		r := rand.Intn(5000)
+		time.Sleep((time.Duration(r) + task.delay) * time.Millisecond)
+
+		if taskResult {
+			break
+		} else {
+			fmt.Printf("%s task failed - retrying\n", task.name)
+		}
+	}
 }

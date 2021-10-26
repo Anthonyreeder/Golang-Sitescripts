@@ -1,9 +1,9 @@
 package main
 
-import "Golang-Sitescripts/shopify"
+import "Golang-Sitescripts/footsites"
 
 //global "Golang-Sitescripts/global"
 
 func main() {
-	shopify.Shopify()
+	footsites.Footsites()
 }

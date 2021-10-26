@@ -77,8 +77,8 @@ Trophy Room - https://www.trophyroomstore.com/ -> 	Fails submitting customer inf
 
 */
 //These are hard coded values which should come from the UI
-var host = "https://smets.lu"
-var link = "https://smets.lu"
+var host = "https://www.atmosusa.com"
+var link = "https://www.atmosusa.com"
 var size = "7"
 var quantity = "1"
 var offerId = "39503380250695" //AKA Variant ID
@@ -104,7 +104,7 @@ var _offerid = ""
 //Login details
 var loginEmail = "anthonyreeder123@gmail.com"
 var password = "Test123"
-var profile = profiles.Profiles{}
+var profile = profiles.ShopifyProfiles{}
 
 //Entry point for Shopify Demo
 func Shopify() {
@@ -113,9 +113,17 @@ func Shopify() {
 
 	//Setup
 	client.SetupClient()
-
 	offerId = GetRandomId(true)
-	FroneEndDemo()
+
+	tasks := Task{host: "https://www.atmosusa.com", link: "https://www.atmosusa.com"}
+
+	tasks.TaskTemplates = append(tasks.TaskTemplates, TaskTemplate{functionToRun: tasks.ShopifyGetProductPageB, name: "1"})
+	tasks.TaskTemplates = append(tasks.TaskTemplates, TaskTemplate{functionToRun: tasks.ShopifyGetProductPageB, name: "2"})
+	tasks.TaskTemplates = append(tasks.TaskTemplates, TaskTemplate{functionToRun: tasks.ShopifyGetProductPageB, name: "3"})
+	tasks.TaskTemplates = append(tasks.TaskTemplates, TaskTemplate{functionToRun: tasks.ShopifyGetProductPageB, name: "4"})
+	tasks.TaskTemplates = append(tasks.TaskTemplates, TaskTemplate{functionToRun: tasks.ShopifyGetProductPageB, name: "5"})
+
+	runTasks(tasks)
 
 }
 
@@ -138,7 +146,7 @@ func FrontEndPreCartDemo() {
 
 	//Now we set our offerID to the REAL pid and attempt to add to cart
 	offerId = GetRandomId(false) //get an outofstock item
-	startTask(ShopifyGetProductPageB, "Checking for product")
+	//startTask(ShopifyGetProductPageB, "Checking for product")
 	startTask(ShopifyAddToCartStandard, "AddToCartRealId")
 	startTask(ExtractPaymentGatewayId, "GetPaymentGatewayId", true)
 	startTask(SubmitPayment, "SubmitThePaymentUrl")
@@ -146,7 +154,7 @@ func FrontEndPreCartDemo() {
 }
 
 func FroneEndDemo() {
-	startTask(ShopifyGetProductPageB, "Checking for product")
+	//startTask(ShopifyGetProductPageB, "Checking for product")
 	startTask(CreatePaymentSession, "PaymentSession")   //Dont wait as we dont us this until the end.
 	startTask(ShopifyAddToCartStandard, "AddToCartId")  //we must wait for this as 1. Its basically the monitor and 2. It wont submit checkout form without this being complete
 	startTask(ExtractShippingRates, "GetShippingRates") //If we are here then ATC was succcess, run async as then if it fails it'll just fail later in the task anyway and its unrecoverable, no point in waiting.
