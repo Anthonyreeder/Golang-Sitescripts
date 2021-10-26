@@ -22,13 +22,16 @@ type FootSitesSessionInfo struct {
 	OsName          string
 	Appname         string
 	AppPlatform     string
-	Height          string
-	Width           string
+	Height          int
+	Width           int
 	AllPlugins      string
 	Referer         string
 	IntLoc          string
-	GetOffset       string
+	GetOffset       int
 	RequestLanguage string
+	DfValue         string
+	StoreColorDepth int
+	UserAgent       string
 }
 
 type FootSitesProfile struct {
@@ -62,20 +65,20 @@ type Shipping struct {
 	NameRegionShipping           string
 	IsoCodeCountryShipping       string
 	NameCountryShipping          string
-	IsoCodeCountryBilling        string
 }
 
 type Billing struct {
-	Namecountrybilling        string
-	FirstNamebilling          string
-	LastNamebilling           string
-	Line1billing              string
-	Line2billing              string
-	Postalcodebilling         string
-	Recordtypebilling         string
-	Townbilling               string
-	Countryisoregionbilling   string
-	Isocoderegionbilling      string
-	Isocodeshortregionbilling string
-	Nameregionbilling         string
+	FirstNamebilling           string
+	LastNamebilling            string
+	Line1billing               string
+	Line2billing               string
+	Postalcodebilling          string
+	Recordtypebilling          string
+	Townbilling                string
+	CountryIsoregionbilling    string
+	IsoCodeRegionBilling       string
+	IsoCodeShortBillingBilling string
+	NameRegionBilling          string
+	IsoCodeCountryBilling      string
+	Namecountrybilling         string
 }

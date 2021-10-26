@@ -81,14 +81,6 @@ func ExtractValue(body, elementType, targetType, typeValue string, optionalAttri
 //Task helpers, to loop functions and log failures to console
 //In future change this so FunctionToRun and Name are in a 'function' object WIll probably build on this in future.
 
-type TaskTemplate struct {
-	functionToRun func() bool
-	name          string
-	complete      bool
-	concurrent    bool
-	delay         time.Duration
-}
-
 type Task struct {
 	TaskTemplates       []TaskTemplate
 	CurrentTaskTemplate TaskTemplate
@@ -97,6 +89,19 @@ type Task struct {
 	SessionInfo         SessionInfo
 	GenDeviceId         string
 	CsrfToken           string
+	OKey                string
+	GenerateTimeMain    string
+	EncryptionKey       string
+	EncryptedCard       EncryptedCard
+	CartId              string
+}
+
+type TaskTemplate struct {
+	functionToRun func() bool
+	name          string
+	complete      bool
+	concurrent    bool
+	delay         time.Duration
 }
 
 type SessionInfo struct {
@@ -114,12 +119,12 @@ type SessionInfo struct {
 	OsName       string
 	Appname      string
 	AppPlatform  string
-	Height       string
-	Width        string
+	Height       int
+	Width        int
 	AllPlugins   string
 	Referer      string
 	IntLoc       string
-	GetOffset    string
+	GetOffset    int
 }
 
 func runTasks(task Task) {

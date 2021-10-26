@@ -59,7 +59,14 @@ func NewRequest(requestType interface{}) *http.Request {
 		return req
 
 	case PUT:
-		req, err := http.NewRequest("PUT", v.Endpoint, nil)
+		if v.Payload == nil {
+			req, err := http.NewRequest("PUT", v.Endpoint, nil)
+			if err != nil {
+				log.Fatal("Failed + " + err.Error())
+			}
+			return req
+		}
+		req, err := http.NewRequest("PUT", v.Endpoint, v.Payload)
 		if err != nil {
 			log.Fatal("Failed + " + err.Error())
 		}

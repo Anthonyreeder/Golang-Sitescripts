@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -33,6 +34,14 @@ func Footsites() {
 	tasks.GetCart()
 	tasks.VerificationAddress()
 	tasks.PutMailFromVerificationAddress()
+	tasks.SetShipping()
+	tasks.SetBilling()
+	tasks.GetOriginKey()
+	tasks.AydenEncrypt1()
+	tasks.AydenEncrypt2()
+	tasks.EncryptCardWithAdyen()
+	tasks.Order()
+	//tasks.PutDeliveryMode()
 	//
 	//Eastbay
 	//Champsports
@@ -49,8 +58,8 @@ func Footsites() {
 	//5. putMailFromVerificationAddress
 	//6. setShipping
 	//7. setBilling
-	//8. putDeliveryMode
-	//9. getOriginKey
+	//8. putDeliveryMode -> I dont think we need this
+	//9. getO	riginKey
 	//10. getAdyenSecured1
 	//11. getAdyenSecured2
 	//12. order
@@ -181,7 +190,7 @@ func (t *Task) GetCSRF() bool {
 	dateTimeStamp := time.Now().UTC().UnixNano()
 
 	get := client.GET{
-		Endpoint: fmt.Sprintf("%s/api/v3/session?timestamp=%d", t.Host, dateTimeStamp),
+		Endpoint: fmt.Sprintf("%s/api/v5/session?timestamp=%d", t.Host, dateTimeStamp),
 	}
 
 	request := client.NewRequest(get)
@@ -293,6 +302,7 @@ func (t *Task) PutMailFromVerificationAddress() bool {
 
 	put := client.PUT{
 		Endpoint: fmt.Sprintf("%s/api/users/carts/current/email/%s?timestamp=%d", t.Host, profileInfo.Person.Email, dateTimeStamp),
+		Payload:  nil,
 	}
 
 	request := client.NewRequest(put)
@@ -310,6 +320,338 @@ func (t *Task) PutMailFromVerificationAddress() bool {
 	switch resp.StatusCode {
 	case 200:
 		//Read the 'decision' to see if its correct
+		return true
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, t.CurrentTaskTemplate.name)
+	}
+
+	return false
+}
+
+func (t *Task) SetShipping() bool {
+	dateTimeStamp := time.Now().UTC().UnixNano()
+
+	payloadBytes, _ := json.Marshal(SetShipping{
+		ShippingAddress: ShippingAddress{
+			SetAsDefaultBilling:  false,
+			SetAsDefaultShipping: false,
+			FirstName:            profileInfo.Shipping.FirstNameShipping,
+			LastName:             profileInfo.Shipping.LastNameShipping,
+			Email:                profileInfo.Person.Email,
+			Phone:                profileInfo.Person.Phone,
+			Country: Country{
+				IsoCodeCountryShipping: profileInfo.Shipping.IsoCodeCountryShipping,
+				NameCountryShipping:    profileInfo.Shipping.NameCountryShipping,
+			},
+			Id:                "",
+			SetAsBilling:      true,
+			SaveInAddressBook: true,
+			Type:              "default",
+			LoqateSearch:      "",
+			Line1:             profileInfo.Shipping.Line1Shipping,
+			Line2:             profileInfo.Shipping.Line2Shipping,
+			PostalCode:        profileInfo.Shipping.PostalCodeShipping,
+			Town:              profileInfo.Shipping.TownShipping,
+			ShippingAddress:   true,
+		},
+	})
+
+	post := client.POST{
+		Endpoint: fmt.Sprintf("%s/api/users/carts/current/addresses/shipping?timestamp=%d", t.Host, dateTimeStamp),
+		Payload:  bytes.NewReader(payloadBytes),
+	}
+
+	request := client.NewRequest(post)
+	request.Header = AddHeaders(Header{additionalHeaders: []additionalHeaders{
+		{key: "x-csrf-token", value: t.CsrfToken},
+		//{key: "x-fl-productid", value: offerId},
+		{key: "origin", value: "https://www.footlocker.co.uk"},
+		{key: "referer", value: fmt.Sprintf("%s/checkout", t.Host)},
+		{key: "x-api-lang", value: "en-gb"},
+	},
+		cookie:  []string{"datadome=3X3o.gD~Y~m6PGoV.-Tu-sT210ZkST.T1Hh6E2FJsio4wkjOJbvrWNFQb.j4zbiPzw0mC8V2UsqxUzZOa8.iLlDAVWDFebpHpgXTVVm4iy"},
+		content: bytes.NewReader(payloadBytes), contentType: "json"}, "localhost")
+	_, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 201:
+		//Read the 'decision' to see if its correct
+		return true
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, t.CurrentTaskTemplate.name)
+	}
+
+	return false
+}
+
+func (t *Task) SetBilling() bool {
+	dateTimeStamp := time.Now().UTC().UnixNano()
+
+	payloadBytes, _ := json.Marshal(BillingAddress{
+		SetAsDefaultBilling:  false,
+		SetAsDefaultShipping: false,
+		FirstName:            profileInfo.Billing.FirstNamebilling,
+		LastName:             profileInfo.Billing.LastNamebilling,
+		Email:                profileInfo.Person.Email,
+		Phone:                profileInfo.Person.Phone,
+		Country: Country{
+			IsoCodeCountryShipping: profileInfo.Billing.IsoCodeCountryBilling,
+			NameCountryShipping:    profileInfo.Billing.Namecountrybilling,
+		},
+		Id:                "",
+		SetAsBilling:      true,
+		SaveInAddressBook: true,
+		Type:              "default",
+		LoqateSearch:      "",
+		Line1:             profileInfo.Billing.Line1billing,
+		Line2:             profileInfo.Billing.Line2billing,
+		PostalCode:        profileInfo.Billing.Postalcodebilling,
+		Town:              profileInfo.Billing.Townbilling,
+		ShippingAddress:   true,
+	})
+
+	post := client.POST{
+		Endpoint: fmt.Sprintf("%s/api/users/carts/current/set-billing?timestamp=%d", t.Host, dateTimeStamp),
+		Payload:  bytes.NewReader(payloadBytes),
+	}
+
+	request := client.NewRequest(post)
+	request.Header = AddHeaders(Header{additionalHeaders: []additionalHeaders{
+		{key: "x-csrf-token", value: t.CsrfToken},
+		//{key: "x-fl-productid", value: offerId},
+		{key: "origin", value: "https://www.footlocker.co.uk"},
+		{key: "referer", value: fmt.Sprintf("%s/checkout", t.Host)},
+		{key: "x-api-lang", value: "en-gb"},
+	},
+		cookie:  []string{"datadome=3X3o.gD~Y~m6PGoV.-Tu-sT210ZkST.T1Hh6E2FJsio4wkjOJbvrWNFQb.j4zbiPzw0mC8V2UsqxUzZOa8.iLlDAVWDFebpHpgXTVVm4iy"},
+		content: bytes.NewReader(payloadBytes), contentType: "json"}, "localhost")
+	_, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		//Read the 'decision' to see if its correct
+		return true
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, t.CurrentTaskTemplate.name)
+	}
+
+	return false
+}
+
+//this may not be needed
+func (t *Task) PutDeliveryMode() bool {
+	dateTimeStamp := time.Now().UTC().UnixNano()
+
+	payloadBytes, _ := json.Marshal(DeliveryMode{
+		DeliveryModeId: "fl-standard",
+	})
+
+	put := client.PUT{
+		Endpoint: fmt.Sprintf("%s/api/users/carts/current/deliverymode?timestamp=%d", t.Host, dateTimeStamp),
+		Payload:  bytes.NewReader(payloadBytes),
+	}
+
+	request := client.NewRequest(put)
+	request.Header = AddHeaders(Header{additionalHeaders: []additionalHeaders{
+		{key: "x-csrf-token", value: t.CsrfToken},
+		//{key: "x-fl-productid", value: offerId},
+		{key: "origin", value: "https://www.footlocker.co.uk"},
+		{key: "referer", value: fmt.Sprintf("%s/checkout", t.Host)},
+		{key: "x-api-lang", value: "en-gb"},
+	},
+		cookie:      []string{"datadome=3X3o.gD~Y~m6PGoV.-Tu-sT210ZkST.T1Hh6E2FJsio4wkjOJbvrWNFQb.j4zbiPzw0mC8V2UsqxUzZOa8.iLlDAVWDFebpHpgXTVVm4iy"},
+		contentType: "json"}, "localhost")
+	_, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		//Read the 'decision' to see if its correct
+		return true
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, t.CurrentTaskTemplate.name)
+	}
+
+	return false
+}
+
+func (t *Task) GetOriginKey() bool {
+	dateTimeStamp := time.Now().UTC().UnixNano()
+
+	get := client.GET{
+		Endpoint: fmt.Sprintf("%s/apigate/payment/origin-key?timestamp=%d", t.Host, dateTimeStamp),
+	}
+
+	request := client.NewRequest(get)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil, contentType: "json"}, "localhost")
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		for _, c := range request.Cookies() {
+			if strings.Contains(c.Name, "cart-guid") {
+				t.CartId = c.Value
+			}
+		}
+
+		OriginResponse := OriginResponse{}
+		json.Unmarshal(respBytes, &OriginResponse)
+		t.OKey = OriginResponse.OKey
+		return true
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, resp.Request.URL)
+	}
+
+	return false
+}
+
+func (t *Task) AydenEncrypt1() bool {
+	get := client.GET{
+		Endpoint: fmt.Sprintf("https://checkoutshopper-live.adyen.com/checkoutshopper/assets/js/%s/securedFields.1.5.5.min.js", t.OKey),
+	}
+
+	request := client.NewRequest(get)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil, contentType: "json"}, "localhost")
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		valueCaptcha := `genTime = [^:]*:([^"]*)`
+		re := regexp.MustCompile(valueCaptcha)
+		result := re.FindStringSubmatch(string(respBytes))
+		t.GenerateTimeMain = result[1][:len(result[1])]
+		return true
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, resp.Request.URL)
+	}
+
+	return false
+}
+
+func (t *Task) AydenEncrypt2() bool {
+	var midNumb = strings.Split(t.OKey, ".")[2]
+	get := client.GET{
+		Endpoint: fmt.Sprintf("https://live.adyen.com/hpp/cse/js/%s.shtml", midNumb),
+	}
+
+	request := client.NewRequest(get)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil, contentType: "json"}, "localhost")
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+
+		valueCaptcha := `var key = "([^"]*)`
+		re := regexp.MustCompile(valueCaptcha)
+		result := re.FindStringSubmatch(string(respBytes))
+		t.EncryptionKey = result[1][:len(result[1])-1]
+		return true
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, resp.Request.URL)
+	}
+
+	return false
+}
+
+func (t *Task) EncryptCardWithAdyen() bool {
+	AydenEncrpytLocal := AydenEncrpytLocal{
+		EncryptionKey: t.EncryptionKey,
+		DfValueMain:   sessionInfo.DfValue,
+		CreditCardNUmber: CreditCardNUmber{
+			Activate:            "1",
+			Generationtime:      t.GenerateTimeMain,
+			InitializeCount:     "1",
+			LuhnCount:           "1",
+			LuhnOkCount:         "1",
+			LuhnSameLengthCount: "1",
+			Number:              profileInfo.CardDetails.Ccnumber,
+		},
+		MonthExpiry: MonthExpiry{
+			Activate:        "1",
+			ExpiryMonth:     profileInfo.CardDetails.Expiry,
+			Generationtime:  t.GenerateTimeMain,
+			InitializeCount: "1",
+		},
+		YearExpiry: YearExpiry{
+			Activate:        "1",
+			ExpiryYear:      profileInfo.CardDetails.ExpiryYear,
+			Generationtime:  t.GenerateTimeMain,
+			InitializeCount: "1",
+		},
+		CvcNumb: CvcNumb{
+			Activate:        "1",
+			Cvc:             profileInfo.CardDetails.Cvc,
+			Generationtime:  t.GenerateTimeMain,
+			InitializeCount: "1",
+		},
+	}
+
+	//Post to local node JS
+	payloadBytes, _ := json.Marshal(AydenEncrpytLocal)
+
+	post := client.POST{
+		Endpoint: "http://localhost:3000/api/encryptCard",
+		Payload:  bytes.NewReader(payloadBytes),
+	}
+
+	request := client.NewRequest(post)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: bytes.NewReader(payloadBytes), contentType: "json"}, "localhost")
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		EncryptedCard := EncryptedCard{}
+		json.Unmarshal(respBytes, &EncryptedCard)
+		t.EncryptedCard = EncryptedCard
+
+		fmt.Println(string(respBytes))
+		return true
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, t.CurrentTaskTemplate.name)
+	}
+
+	return false
+
+}
+
+func (t *Task) Order() bool {
+	dateTimeStamp := time.Now().UTC().UnixNano()
+
+	payloadBytes, _ := json.Marshal(Order{
+		OptIn:                 false,
+		PreferredLanguage:     "en",
+		TermsAndCondition:     true,
+		DeviceId:              t.GenDeviceId,
+		CartId:                t.CartId,
+		EncryptedCardNumber:   t.EncryptedCard.Card,
+		EncryptedExpiryMonth:  t.EncryptedCard.Month,
+		EncryptedExpiryYear:   t.EncryptedCard.Year,
+		EncryptedSecurityCode: t.EncryptedCard.Cvc,
+		PaymentMethod:         "CREDITCARD",
+		ReturnUrl:             fmt.Sprintf("%s/adyen/checkout", t.Host),
+		BrowserInfo: BrowserInfo{
+			ScreenWidth:    sessionInfo.Width,
+			ScreenHeight:   sessionInfo.Height,
+			ColorDepth:     sessionInfo.StoreColorDepth,
+			UserAgent:      sessionInfo.UserAgent,
+			TimeZoneOffset: sessionInfo.GetOffset,
+			Language:       "en-US",
+			JavaEnabled:    false,
+		},
+	})
+
+	post := client.POST{
+		Endpoint: fmt.Sprintf("%s/api/users/orders/adyen?timestamp=%d", t.Host, dateTimeStamp),
+		Payload:  bytes.NewReader(payloadBytes),
+	}
+
+	request := client.NewRequest(post)
+	request.Header = AddHeaders(Header{additionalHeaders: []additionalHeaders{{key: "x-csrf-token", value: t.CsrfToken}}, cookie: []string{}, content: bytes.NewReader(payloadBytes), contentType: "json"}, "localhost")
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		fmt.Println(string(respBytes))
+		t.GenDeviceId = string(respBytes)
 		return true
 	default:
 		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, t.CurrentTaskTemplate.name)
