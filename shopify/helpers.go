@@ -61,7 +61,7 @@ func AddHeadersTest(header Header, host string) http.Header {
 //Default headers with functionality to set the host, content type and add 1-off hard-coded cookies.
 func AddHeaders(header Header, host string) http.Header {
 	var x = http.Header{
-		"Origin":                    {host},
+		"Host":                      {host},
 		"sec-ch-ua":                 {"\"Chromium\";v=\"92\", \" Not A;Brand\";v=\"99\", \"Google Chrome\";v=\"92\""},
 		"sec-ch-ua-mobile":          {"?0"},
 		"Upgrade-Insecure-Requests": {"1"},
@@ -172,6 +172,36 @@ func GetProductInStock(p Products, sku string) ProductData {
 					return product
 				}
 			}
+		}
+	}
+	return ProductData{Title: ""}
+}
+
+func GetProductWithTags(p Products, tags []string) ProductData {
+	for _, product := range p {
+		for _, tag := range product.Tags {
+			//Build our Regex expression
+			//For each tag in Tags we want to add an addiotnal one as we want to check that all the keywords are there
+			//If they put Yeezy and +350
+			//WE will check if they have a tag containing Yeezy
+			//We will check if they have a tag containing 350.
+			//If both above are true then we move onto next step
+			//If false we will also check if they have a tag containing Yeezy and 350 (yeezy-350) in a single tag
+			//If true we will move onto next step
+
+			//Now we have a product:
+			//We will then Check if there is a 'size' assoicated.
+			//If there is NO size we move onto next step with the product
+			//If there IS a size then we will check if this size for this product exists
+			//If it does then extract the OfferID for this size
+			//else that product doesn't exist.
+
+			//Lastly if we have a product offerID if it has size (and a match) or no size and includes our keywords
+			//Now we want to return the product offerID then we will attempt to add this product to cart.
+			//If we didn't find product then this means either the keywords are bad and dont exist OR it means the product juuts simply hasn't been added to the catelogue.
+			//We can monitor by repeating this task, otherwise if we have the offerID and its OOS we would be better off repeating ATC on that offerID rather than repeat this process.
+
+			fmt.Println(tag)
 		}
 	}
 	return ProductData{Title: ""}

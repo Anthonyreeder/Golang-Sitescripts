@@ -186,7 +186,6 @@ type EncryptedCard struct {
 }
 
 type Order struct {
-	OptIn                 bool        `json:"optIn"`
 	PreferredLanguage     string      `json:"preferredLanguage"`
 	TermsAndCondition     bool        `json:"termsAndCondition"`
 	DeviceId              string      `json:"deviceId"`

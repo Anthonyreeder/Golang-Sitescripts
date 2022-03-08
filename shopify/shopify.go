@@ -77,20 +77,38 @@ Trophy Room - https://www.trophyroomstore.com/ -> 	Fails submitting customer inf
 
 */
 //These are hard coded values which should come from the UI
-var host = "https://www.atmosusa.com"
-var link = "https://www.atmosusa.com"
-var size = "7"
-var quantity = "1"
-var offerId = "39503380250695" //AKA Variant ID
 
-//Card details
-var cardNumber = "5354568000637394"
-var name = "JohnSmith"
-var month = "03"
-var year = "2026"
-var ccv = "960"
+type PaymentDetails struct {
+	CardNumber string
+	CardName   string
+	Month      string
+	Year       string
+	Ccv        string
+}
 
-//Scoped-access variables to ease the burden of passing data between methods, would otherwise be handled by the supporting framework/task system
+type ProductInfo struct {
+	Host     string
+	Link     string
+	Size     string
+	Quantity string
+	OfferId  string
+}
+
+type LoginDetails struct {
+	LoginEmail string
+	Password   string
+	Profile    string
+	Proxy      string
+	Port       string
+	ProxyUser  string
+	ProxyPass  string
+}
+
+var DValue_Profiles = profiles.ShopifyProfiles{}
+var DValue_productInfo = ProductInfo{}
+var DValue_paymentDetails = PaymentDetails{}
+var DValue_loginDetails = LoginDetails{}
+
 var authKey = ""
 var botKey = ""
 var gatewayKey = ""
@@ -101,30 +119,22 @@ var payment_token = ""
 var process_url = ""
 var _offerid = ""
 
-//Login details
-var loginEmail = "anthonyreeder123@gmail.com"
-var password = "Test123"
-var profile = profiles.ShopifyProfiles{}
-
 //Entry point for Shopify Demo
-func Shopify() {
-	//Set Profile
-	profile = profiles.UsaProfile()
+func Shopify(profile profiles.ShopifyProfiles, productInfo ProductInfo, paymentDetails PaymentDetails, loginDetails LoginDetails) {
+	proxy := client.Proxy{
+		Proxy:     loginDetails.Proxy,
+		Port:      loginDetails.Port,
+		ProxyUser: loginDetails.ProxyUser,
+		ProxyPass: loginDetails.ProxyPass,
+	}
+	client.SetupClient(proxy)
+	DValue_Profiles = profile
+	DValue_productInfo = productInfo
+	DValue_paymentDetails = paymentDetails
+	DValue_loginDetails = loginDetails
 
-	//Setup
-	client.SetupClient()
-	offerId = GetRandomId(true)
-
-	tasks := Task{host: "https://www.atmosusa.com", link: "https://www.atmosusa.com"}
-
-	tasks.TaskTemplates = append(tasks.TaskTemplates, TaskTemplate{functionToRun: tasks.ShopifyGetProductPageB, name: "1"})
-	tasks.TaskTemplates = append(tasks.TaskTemplates, TaskTemplate{functionToRun: tasks.ShopifyGetProductPageB, name: "2"})
-	tasks.TaskTemplates = append(tasks.TaskTemplates, TaskTemplate{functionToRun: tasks.ShopifyGetProductPageB, name: "3"})
-	tasks.TaskTemplates = append(tasks.TaskTemplates, TaskTemplate{functionToRun: tasks.ShopifyGetProductPageB, name: "4"})
-	tasks.TaskTemplates = append(tasks.TaskTemplates, TaskTemplate{functionToRun: tasks.ShopifyGetProductPageB, name: "5"})
-
-	runTasks(tasks)
-
+	SearchByKeyword()
+	//	FroneEndDemo()
 }
 
 var taskComplete = false
@@ -145,7 +155,7 @@ func FrontEndPreCartDemo() {
 	startTaskInt(ShopifyChangeCart, "RemoveFakeProductFromCart", 0)
 
 	//Now we set our offerID to the REAL pid and attempt to add to cart
-	offerId = GetRandomId(false) //get an outofstock item
+	//	offerId = GetRandomId(false) //get an outofstock item
 	//startTask(ShopifyGetProductPageB, "Checking for product")
 	startTask(ShopifyAddToCartStandard, "AddToCartRealId")
 	startTask(ExtractPaymentGatewayId, "GetPaymentGatewayId", true)
@@ -155,9 +165,9 @@ func FrontEndPreCartDemo() {
 
 func FroneEndDemo() {
 	//startTask(ShopifyGetProductPageB, "Checking for product")
-	startTask(CreatePaymentSession, "PaymentSession")   //Dont wait as we dont us this until the end.
-	startTask(ShopifyAddToCartStandard, "AddToCartId")  //we must wait for this as 1. Its basically the monitor and 2. It wont submit checkout form without this being complete
-	startTask(ExtractShippingRates, "GetShippingRates") //If we are here then ATC was succcess, run async as then if it fails it'll just fail later in the task anyway and its unrecoverable, no point in waiting.
+	startTask(CreatePaymentSession, "PaymentSession", false) //Dont wait as we dont us this until the end.
+	startTask(ShopifyAddToCartStandard, "AddToCartId")       //we must wait for this as 1. Its basically the monitor and 2. It wont submit checkout form without this being complete
+	startTask(ExtractShippingRates, "GetShippingRates")      //If we are here then ATC was succcess, run async as then if it fails it'll just fail later in the task anyway and its unrecoverable, no point in waiting.
 	startTask(LoadCheckoutForm, "LoadCheckoutForm")
 	startTask(SubmitCustomerInfo, "SubmitTheCustomerInfo")                //If we skip waiting here then we can start extracting the token now
 	startTask(ExtractShippingToken, "ExtractTheShippingToken")            //must wait for token

@@ -19,12 +19,12 @@ import (
 func ShopifyGetProductPageF() {
 	//Setup our GET request obj
 	get := client.GET{
-		Endpoint: fmt.Sprintf("%s/collections/mens/products/adidas-originals-pharrell-williams-boost-slides-fy6140", link),
+		Endpoint: fmt.Sprintf("%s/collections/mens/products/adidas-originals-pharrell-williams-boost-slides-fy6140", DValue_productInfo.Link),
 	}
 	//Retrieve a configured HTTP Request obj
 	request := client.NewRequest(get)
 	//Add our headers to the HTTP Request obj
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
 	//Obtain the responsey
 	_, resp := client.NewResponse(request)
 
@@ -57,10 +57,10 @@ func ShopifyGetProductPageF() {
 func GetRandomId(instock bool) string {
 	//Setup our GET request obj
 	get := client.GET{
-		Endpoint: fmt.Sprintf("%s/products.json?limit=500&page=1&order=updated_at", link),
+		Endpoint: fmt.Sprintf("%s/products.json?limit=500&page=1&order=updated_at", DValue_productInfo.Link),
 	}
 	request := client.NewRequest(get)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
 	respBytes, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
@@ -95,23 +95,49 @@ func GetRandomId(instock bool) string {
 	return ""
 }
 
-func (t *Task) ShopifyGetProductPageB() bool {
+func ShopifyGetProductPageB() bool {
 	//Setup our GET request obj
 	get := client.GET{
-		Endpoint: fmt.Sprintf("%s/products.json?limit=500&page=1&order=updated_at", t.link),
+		Endpoint: fmt.Sprintf("%s/products.json?limit=500&page=1&order=updated_at", DValue_productInfo.Link),
 	}
 	request := client.NewRequest(get)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, t.host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
 	respBytes, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
 	case 200:
 		product := Product{}
 		json.Unmarshal(respBytes, &product)
-		test := GetProductInStock(product.Products, offerId).Title
+		test := GetProductInStock(product.Products, DValue_productInfo.OfferId).Title
 		if test != "" {
 			fmt.Println("Product found")
-			t.currentTaskTemplate.complete = true
+			return true
+		} else {
+			fmt.Println("Product NOT found")
+		}
+
+	default:
+		fmt.Printf("unexpected status code %v when requesting : %s", resp.StatusCode, get.Endpoint)
+	}
+
+	return false
+}
+
+func SearchByKeyword() bool {
+	get := client.GET{
+		Endpoint: fmt.Sprintf("%s/products.json?limit=500&page=1&order=updated_at", DValue_productInfo.Link),
+	}
+	request := client.NewRequest(get)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
+	respBytes, resp := client.NewResponse(request)
+
+	switch resp.StatusCode {
+	case 200:
+		product := Product{}
+		json.Unmarshal(respBytes, &product)
+		test := GetProductInStock(product.Products, DValue_productInfo.OfferId).Title
+		if test != "" {
+			fmt.Println("Product found")
 			return true
 		} else {
 			fmt.Println("Product NOT found")
@@ -128,28 +154,23 @@ func (t *Task) ShopifyGetProductPageB() bool {
 func ShopifyAddToCartStandard() {
 	var addToCartId string
 
-	if _offerid != "" {
-		addToCartId = _offerid
-		_offerid = ""
-	} else {
-		addToCartId = offerId
-	}
+	addToCartId = DValue_productInfo.OfferId
 
 	fmt.Println(addToCartId)
 
 	payloadBytes, _ := json.Marshal(AddToCartStandardRequest{
 		Id:       addToCartId,
-		Quantity: quantity,
+		Quantity: DValue_productInfo.Quantity,
 		FormType: "product",
 	})
 
 	post := client.POST{
-		Endpoint: fmt.Sprintf("%s/cart/add.js", link),
+		Endpoint: fmt.Sprintf("%s/cart/add.js", DValue_productInfo.Link),
 		Payload:  bytes.NewReader(payloadBytes),
 	}
 
 	request := client.NewRequest(post)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil, contentType: "json"}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil, contentType: "json"}, DValue_productInfo.Host)
 	_, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
@@ -167,11 +188,11 @@ func ShopifyAddToCartStandard() {
 func CreatePaymentSession() {
 	payloadBytes, _ := json.Marshal(PaymentSessionRequest{
 		CreditCard: CreditCard{
-			Number:             cardNumber,
-			Name:               name,
-			Month:              month,
-			Year:               year,
-			Verification_value: ccv,
+			Number:             DValue_paymentDetails.CardNumber,
+			Name:               DValue_paymentDetails.CardName,
+			Month:              DValue_paymentDetails.Month,
+			Year:               DValue_paymentDetails.Year,
+			Verification_value: DValue_paymentDetails.Ccv,
 		},
 	})
 
@@ -203,11 +224,11 @@ func CreatePaymentSession() {
 //GET the checkout form page and extract the AuthId
 func LoadCheckoutForm() {
 	get := client.GET{
-		Endpoint: fmt.Sprintf("%s/checkout", link),
+		Endpoint: fmt.Sprintf("%s/checkout", DValue_productInfo.Link),
 	}
 
 	request := client.NewRequest(get)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
 	respBytes, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
@@ -243,19 +264,19 @@ func SubmitCustomerInfo() {
 		"authenticity_token":                     {authKey},
 		"previous_step":                          {"contact_information"},
 		"step":                                   {"shipping_method"},
-		"checkout[email]":                        {profile.Email},
+		"checkout[email]":                        {DValue_Profiles.Email},
 		"checkout[buyer_accepts_marketing]":      {"1"},
 		"checkout[pickup_in_store][selected]":    {"false"},
-		"checkout[shipping_address][first_name]": {profile.FirstName},
-		"checkout[shipping_address][last_name]":  {profile.LastName},
-		"checkout[shipping_address][company]":    {profile.Company},
-		"checkout[shipping_address][address1]":   {profile.Address1},
-		"checkout[shipping_address][address2]":   {profile.Address2},
-		"checkout[shipping_address][city]":       {profile.City},
-		"checkout[shipping_address][country]":    {profile.Country},
-		"checkout[shipping_address][province]":   {profile.Province},
-		"checkout[shipping_address][zip]":        {profile.PostCode},
-		"checkout[shipping_address][phone]":      {profile.Phone},
+		"checkout[shipping_address][first_name]": {DValue_Profiles.FirstName},
+		"checkout[shipping_address][last_name]":  {DValue_Profiles.LastName},
+		"checkout[shipping_address][company]":    {DValue_Profiles.Company},
+		"checkout[shipping_address][address1]":   {DValue_Profiles.Address1},
+		"checkout[shipping_address][address2]":   {DValue_Profiles.Address2},
+		"checkout[shipping_address][city]":       {DValue_Profiles.City},
+		"checkout[shipping_address][country]":    {DValue_Profiles.Country},
+		"checkout[shipping_address][province]":   {DValue_Profiles.Province},
+		"checkout[shipping_address][zip]":        {DValue_Profiles.PostCode},
+		"checkout[shipping_address][phone]":      {DValue_Profiles.Phone},
 		// "g-recaptcha-response": captcha_token,
 		"checkout[client_details][browser_width]":      {"1029"},
 		"checkout[client_details][browser_height]":     {"937"},
@@ -271,7 +292,7 @@ func SubmitCustomerInfo() {
 	}
 
 	request := client.NewRequest(post)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
 	_, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
@@ -291,11 +312,11 @@ func ExtractShippingRates() {
 	fmt.Println("Grabbing the shipping id")
 
 	get := client.GET{
-		Endpoint: fmt.Sprintf("%s/cart/shipping_rates.json?shipping_address[zip]=%s&shipping_address[country]=%s&shipping_address[province]=%s", link, profile.PostCode, profile.Country, profile.Province),
+		Endpoint: fmt.Sprintf("%s/cart/shipping_rates.json?shipping_address[zip]=%s&shipping_address[country]=%s&shipping_address[province]=%s", DValue_productInfo.Link, DValue_Profiles.PostCode, DValue_Profiles.Country, DValue_Profiles.Province),
 	}
 
 	request := client.NewRequest(get)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
 	respBytes, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
@@ -318,7 +339,7 @@ func ExtractShippingRates() {
 		source := shippingMethodResponse.ShippingRates[0].Source
 		//# Generate the shipping id to submit with checkout
 		shipping_option = source + "-" + code + "-" + price //name + "-" + price
-		if strings.Contains(host, "shoepalace") {
+		if strings.Contains(DValue_productInfo.Host, "shoepalace") {
 			shipping_option = "shopify-Flat%20Rate-1000.00"
 		}
 		if shipping_option != "" {
@@ -337,17 +358,17 @@ func ExtractShippingRates() {
 //There is an async POST method which may be quicker
 func POSTExtractShippingRates() {
 	payload := url.Values{
-		"shipping_address[zip]":      {profile.PostCode},
-		"shipping_address[country]":  {profile.Country},
-		"shipping_address[province]": {profile.Province},
+		"shipping_address[zip]":      {DValue_Profiles.PostCode},
+		"shipping_address[country]":  {DValue_Profiles.Country},
+		"shipping_address[province]": {DValue_Profiles.Province},
 	}
 
 	post := client.POSTUrlEncoded{
-		Endpoint:       fmt.Sprintf("%s/cart/prepare_shipping_rates.json", link),
+		Endpoint:       fmt.Sprintf("%s/cart/prepare_shipping_rates.json", DValue_productInfo.Link),
 		EncodedPayload: payload.Encode(),
 	}
 	request := client.NewRequest(post)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
 	respBytes, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
@@ -388,7 +409,7 @@ func ExtractShippingToken() {
 	}
 
 	request := client.NewRequest(get)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
 	respBytes, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
@@ -435,7 +456,7 @@ func SubmitShippingMethodDetails() {
 	}
 
 	request := client.NewRequest(post)
-	request.Header = AddHeadersTest(Header{cookie: []string{}, content: nil}, host)
+	request.Header = AddHeadersTest(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
 	respBytes, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
@@ -468,7 +489,7 @@ func ExtractPaymentGatewayId() {
 	}
 
 	request := client.NewRequest(get)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
 	respBytes, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
@@ -523,7 +544,7 @@ func SubmitPayment() {
 	}
 
 	request := client.NewRequest(post)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
 	_, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
@@ -556,7 +577,7 @@ func CheckPaymentProcess() {
 	}
 
 	request := client.NewRequest(get)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil}, DValue_productInfo.Host)
 	respBytes, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {
@@ -590,12 +611,12 @@ func ShopifyChangeCart(q int) {
 	})
 
 	post := client.POST{
-		Endpoint: fmt.Sprintf("%s/cart/change.js", link),
+		Endpoint: fmt.Sprintf("%s/cart/change.js", DValue_productInfo.Link),
 		Payload:  bytes.NewReader(payloadBytes),
 	}
 
 	request := client.NewRequest(post)
-	request.Header = AddHeaders(Header{cookie: []string{}, content: nil, contentType: "json"}, host)
+	request.Header = AddHeaders(Header{cookie: []string{}, content: nil, contentType: "json"}, DValue_productInfo.Host)
 	_, resp := client.NewResponse(request)
 
 	switch resp.StatusCode {

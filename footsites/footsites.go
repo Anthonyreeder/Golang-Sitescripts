@@ -19,13 +19,13 @@ var offerId = "SIZE_1235010" //AKA Variant ID
 var datadomeCookie = "M7sTRtf1PAbvORz0hOCT.r-75jwAccJiuL5iHbb7ImffTFFY0-54snnMvCSLIIrI7D.tJOWOhVJU_qT1KR65fStUwUMydKgHG.XNb8AElo"
 
 func Footsites() {
-	client.SetupClient()
+	//	client.SetupClient()
 
 	//Set Profile
 	sessionInfo = profiles.FootsitesSessionInfoUk()
 	profileInfo = profiles.FootSitesProfileUk()
 	//Setup
-	client.SetupClient()
+	//client.SetupClient()
 	tasks := Task{Host: "https://www.footlocker.co.uk", Link: "https://www.footlocker.co.uk"}
 
 	tasks.GetSnare()
@@ -515,7 +515,7 @@ func (t *Task) AydenEncrypt1() bool {
 
 	switch resp.StatusCode {
 	case 200:
-		valueCaptcha := `genTime = [^:]*:([^"]*)`
+		valueCaptcha := `genTime = "([^"]*)`
 		re := regexp.MustCompile(valueCaptcha)
 		result := re.FindStringSubmatch(string(respBytes))
 		t.GenerateTimeMain = result[1][:len(result[1])]
@@ -554,8 +554,9 @@ func (t *Task) AydenEncrypt2() bool {
 
 func (t *Task) EncryptCardWithAdyen() bool {
 	AydenEncrpytLocal := AydenEncrpytLocal{
-		EncryptionKey: t.EncryptionKey,
 		DfValueMain:   sessionInfo.DfValue,
+		EncryptionKey: t.EncryptionKey,
+
 		CreditCardNUmber: CreditCardNUmber{
 			Activate:            "1",
 			Generationtime:      t.GenerateTimeMain,
@@ -584,7 +585,11 @@ func (t *Task) EncryptCardWithAdyen() bool {
 			InitializeCount: "1",
 		},
 	}
-
+	fmt.Println("Test")
+	fmt.Println(AydenEncrpytLocal.CreditCardNUmber)
+	fmt.Println(AydenEncrpytLocal.MonthExpiry)
+	fmt.Println(AydenEncrpytLocal.YearExpiry)
+	fmt.Println(AydenEncrpytLocal.CvcNumb)
 	//Post to local node JS
 	payloadBytes, _ := json.Marshal(AydenEncrpytLocal)
 
@@ -602,6 +607,11 @@ func (t *Task) EncryptCardWithAdyen() bool {
 		EncryptedCard := EncryptedCard{}
 		json.Unmarshal(respBytes, &EncryptedCard)
 		t.EncryptedCard = EncryptedCard
+		fmt.Println("length")
+		fmt.Println(len(EncryptedCard.Card))
+		fmt.Println(len(EncryptedCard.Month))
+		fmt.Println(len(EncryptedCard.Year))
+		fmt.Println(len(EncryptedCard.Cvc))
 
 		fmt.Println(string(respBytes))
 		return true
@@ -610,22 +620,20 @@ func (t *Task) EncryptCardWithAdyen() bool {
 	}
 
 	return false
-
 }
 
 func (t *Task) Order() bool {
 	dateTimeStamp := time.Now().UTC().UnixNano()
 
 	payloadBytes, _ := json.Marshal(Order{
-		OptIn:                 false,
 		PreferredLanguage:     "en",
 		TermsAndCondition:     true,
 		DeviceId:              t.GenDeviceId,
 		CartId:                t.CartId,
-		EncryptedCardNumber:   t.EncryptedCard.Card,
-		EncryptedExpiryMonth:  t.EncryptedCard.Month,
-		EncryptedExpiryYear:   t.EncryptedCard.Year,
-		EncryptedSecurityCode: t.EncryptedCard.Cvc,
+		EncryptedCardNumber:   "adyenjs_0_1_18$lVVV2mqti3NJNABloIoTjYhSzBUQIklPgCBuprAKA/pc4oXhC/7WaJk1OhTShsbjqLU05EcPtxCiUmwpxLyYpEU/XhZ8mNdVT5pAKNpD2rW/qsGl/GE9ITRfTHo5QhH/HMcMsNvhoSGSJX4pPUOksItqDcQxiZ7dpojJtGiX4AQbYNvOKxOqJAgfZLCN2J82rIAhKrVNwQg993Y1jePkFihbNthMjH6V1UWGRodoyBPn036SHhpJG89vSMXoAAMNsWce29K6g1y944SVbD0KOMgqZ94axog3Rb2j6ISB4Eo568DSfjbXFcqRWxYrI2yKd8be31WpomfIMulH4lCppg==$LPPlHPbNQbjBqJxE7DT40QFMmVRzrtXLKgnO6j5XOsw6HS/pCKDT1swKNoY2mHBW6SLnW/owsg7FnjrrF4KhPsyyr3rQX/pc0uvZ08tU2sGlIHhktpuRmTzh8witV0WEAM7h3lSSIGcLSO+BWK1jhkn3e+2+g47KPNWGZmJo4MOi6LDVFQeNWyyX4hQjCSl3IsEMowVkI2Z7tO3MUR+CHwK465lfuI09Bnb8oD25S0XuuKJSWBXdopGuEV85UAc0khuUsZAyPA+tInM8E9kO4fKHMnV+DDQUQVgtmgIdAnGuzJY9OrjhKjXVCS4hDKDirlNT7Z/UWa/QeXvqjFFQv574LUSqxmvch+DeZ5i9w+6nWzzWxQnzZ+VfmOZX+uzbfzn2YFDQxk2uD9sgSpYc3sanDdWoH4naIVwk9pmP03kRXAFnE+Ve0Q4=",
+		EncryptedExpiryMonth:  "adyenjs_0_1_18$I7n+NtkSi3NvEVCURkPSHYOHGSHUhQumbmQS6K7YmakJN+sp0t0W2590FAVOtayzimL1pYjYq9mtQwqnM/OhoSay/g5edSsdwOLc8udQ6Zta63q58VJFh1w0y49roTllQycpwOx428WhiMSGaJJiXp/W/Mbe6y+l3MXsj3Q4yrW0gwDzsTr3sIm6oTrwYp7sDd6UADBtPykNxqpQCcrLezI3rcXygjh2IvM4WRyGreXZ6EP4xU5nnK84y7lY0WEjMRF4N0h6ov7wG3LEw1OxmcPmqTV8Z67ZjfGoTJ9yTZ8PshM1EFUjuh+CdW9aMeziZfzoxc+E/sVrShpYaKX5zA==$RChDi74GS08UZGImbC3C8P/MwajnDIFNwLicdY88ZInsriaJUCKatJejn8TjTDl1GJUgWPjsrXnuVqQw1LBBke+1lld8A4dpiDJAj2ZBDoe3g+F+gSUfzePDt6rTCU0oNZf3gKHQQO0x13r14zCsSPvpLMFVkvyT+gpU+5J7eHiSuUyRx9wmjhfglfCaDH3r0I7oWEP1BKm808s4m60bVSLh7ysv25mC07UAfePS2P1XKkh64uQx9Ip64GFCpSbKacCwsIbutAPJVyDK0RqsPwJxzHdGkUx+BwyA3aNNj0ZlaCqYG63eS6rgBl+uLDxkuC6fXNk0osP3tfheoh/+r7A=",
+		EncryptedExpiryYear:   "adyenjs_0_1_18$XgAzPCRszMcq5+Oar3S6RdJD3+2FrSo1R2/9+lpjMLZwp8MxO8utuJOddePoX2S9eOgOBbaQpYPkrBttxgnwqa1rEYVGIziiZlS9cDmGvsgRE5YRxH1g74UHebUSTk67r/EZTyhIrdqa5naUl+E+hRmAGI4uBZegrqIQUVE76AQLlwMx1M90dtEhqoI41sdOzewRl1QkjK7/sG6doKwK07KJeOJaMRwG88pwjYpAKYinGtAkDH3DytINAe9GxLsbHnVbQnYwt/CSFKUxK429Jq++4lBe78ru+SLvdcD9xxHcS3wDJgbYL2Qokup9N4bvdOeKD767PPFsFsDiIIR25Q==$PTRm0/puTMnP7788Mhj9JOxsf0hgiEQeNl0emQEuKyCePuSkYMQwrSD8OPg8lPnWhjs6PZ0VYC6yGG5nqcvzOvDuaWSvwHrJfOS5YBqyPHwyIjJ5S4TX2Dhz5HTUm/M5+9O0VkrLxzCd8G6ZmnyPo62bhDuJ810WpD52diE5CEGIhUxfdRveN8j1KHQ4hCzsLSqLUKs0DFNsOmP6Vomcmevd/DnClIOZJ725EZICZ4Wt5up4c+4Kl1CNzuZ2J+vplRHvDgZEx9Bsh8zI3kPhoxoE2J3RT2UECmSe1Rj4y0x5TCg/kjJcapX/xtdWBxfjtJ57EwE1mRsAauA472VPnJRr",
+		EncryptedSecurityCode: "adyenjs_0_1_18$P7hcyGfSf3Ndhf8GDremTbbSE/hXVFqN/nS+qaeN324lQcQcJHSb23/p7riQXzqzoyRYgw4yoGa6Knp2Uw7Jloarm+id5daCqfBU951DhY+EF8JRlWU77JM1AzRCXAF8Irs3fzGdaja4Ie0Cg2GojPI3FnDQdGawPe3/9iAeohxSl/TGvVIJS0jxHb+ZJxieMmEDQ8EUe0DQqB+lEY5mpEMoEIn27RoBIJM+9pPrumIGGlcFqQH+I0P/NH6qS4f+Xvy3oOVPs3I2Y7yhVbZCWyIKBCS4FvJd9PWXHBtM4RhAaK/zw7fZT+vdiLN/fBZ6SRinkYUY0CQ47/KYRQQRoA==$fj+BgpzYEBvk51CdLChWHpSysGPm4H+0mIbq63s5BnrgsSnsHC7zP6gMmAQPTyNAWxMXk6f1O372RcqZDFU9do2W/nNJPE4i5EWiAR5h0+av7lwnSEz+i+e6b7V97hEYfeutgQMKzWTMMStIg7aKlPcsdn7XZM86uk+XzRmeMdL9rjWB3Lnjk4RxMoMmwzqRfQXJYcPvXjgLXHcqazxEUMuAPR5dbN+X8sma7uNlA5lyJxdHhOgvTjwxrEA8CMnd1p17IzC996I/SbUtJQZs+S3Z81hOECgVAdLuSJ484ARDzcUpjUw7+wTuAegA+a0lHatL6ThvIdUs6w==",
 		PaymentMethod:         "CREDITCARD",
 		ReturnUrl:             fmt.Sprintf("%s/adyen/checkout", t.Host),
 		BrowserInfo: BrowserInfo{
@@ -640,7 +648,7 @@ func (t *Task) Order() bool {
 	})
 
 	post := client.POST{
-		Endpoint: fmt.Sprintf("%s/api/users/orders/adyen?timestamp=%d", t.Host, dateTimeStamp),
+		Endpoint: fmt.Sprintf("%s/api/v2/users/orders?timestamp=%d", t.Host, dateTimeStamp),
 		Payload:  bytes.NewReader(payloadBytes),
 	}
 

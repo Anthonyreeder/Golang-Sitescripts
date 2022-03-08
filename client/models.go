@@ -20,3 +20,10 @@ type POSTUrlEncoded struct {
 	Endpoint       string
 	EncodedPayload string
 }
+
+type Proxy struct {
+	Proxy     string
+	Port      string
+	ProxyUser string
+	ProxyPass string
+}

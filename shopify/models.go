@@ -55,6 +55,7 @@ type ProductData struct {
 	Title    string    `json:"title"`
 	Handle   string    `json:"handle"`
 	Variants []Variant `json:"variants"`
+	Tags     []string  `json:"tags"`
 }
 
 type Variant struct {

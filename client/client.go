@@ -12,11 +12,11 @@ import (
 var Client http.Client
 
 //Add proxy support later if needed
-func SetupClient() {
+func SetupClient(details Proxy) {
 	cookieJar, _ := cookiejar.New(nil)
 
 	//Create client
-	Client = newClient()
+	Client = newClient(details)
 
 	//Create and set cookiejar in client
 	Client.Jar = cookieJar
@@ -24,15 +24,31 @@ func SetupClient() {
 }
 
 //private
-func newClient() http.Client {
-	//set loopback for charles
+func newClient(details Proxy) http.Client {
 	proxyUrl, err := url.Parse("http://localhost:8888")
 	if err != nil {
 		log.Fatal("Failed + " + err.Error())
 	}
 
-	//return client
 	return http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
+
+	//return client
+	//return http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
+	return http.Client{
+		/*Transport: &http.Transport{
+			Proxy: http.ProxyURL(&url.URL{
+				Scheme: "http",
+				User:   url.UserPassword(details.ProxyUser, details.ProxyPass),
+				Host:   details.Proxy + ":" + details.Port,
+			}),
+		},
+		*/
+	}
+	//proxies.guap.io:31112
+	//user_3109_dover_61
+	//bBMr9T3U19SAsoTc_country-UnitedStates_session-DOVqvmvP
+
+	// http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
 }
 
 func NewRequest(requestType interface{}) *http.Request {
